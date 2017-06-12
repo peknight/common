@@ -17,7 +17,6 @@ public final class StringUtils {
         if (origin == null || origin.length() == 0) {
             return origin;
         }
-
         if (origin.indexOf('_') != -1) {
             String[] splits = origin.split("_");
             StringBuilder builder = new StringBuilder("");
@@ -29,20 +28,22 @@ public final class StringUtils {
             }
             return builder.toString();
         }
-
-        char chars[] = origin.toCharArray();
+        if (Character.isUpperCase(origin.charAt(0))) {
+            return origin;
+        }
+        char[] chars = origin.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]);
         return new String(chars);
     }
 
     /**
      * 将字符串转换为驼峰命名法
+     * 注: 如果前两个字母均为大写，那么首字母不会转换为小写
      */
     public static String toCamelCase(String origin) {
         if (origin == null || origin.length() == 0) {
             return origin;
         }
-
         if (origin.indexOf('_') != -1) {
             String[] splits = origin.split("_");
             StringBuilder builder = new StringBuilder("");
@@ -55,13 +56,12 @@ public final class StringUtils {
             }
             return builder.toString();
         }
-
-        if (origin.length() > 1 && Character.isUpperCase(origin.charAt(1)) &&
-                Character.isUpperCase(origin.charAt(0))){
+        if (Character.isLowerCase(origin.charAt(0)) ||
+                (origin.length() > 1 && Character.isUpperCase(origin.charAt(1)) &&
+                Character.isUpperCase(origin.charAt(0)))){
             return origin;
         }
-
-        char chars[] = origin.toCharArray();
+        char[] chars = origin.toCharArray();
         chars[0] = Character.toLowerCase(chars[0]);
         return new String(chars);
     }

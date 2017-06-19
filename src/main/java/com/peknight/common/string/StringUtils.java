@@ -1,4 +1,4 @@
-package com.peknight.common.util;
+package com.peknight.common.string;
 
 /**
  * String工具类

@@ -101,4 +101,58 @@ public final class ArrayUtils {
         }
         return -1;
     }
+
+    /**
+     * 创建subset数组中各个元素在superset数组中对应下标的数组
+     */
+    public static int[] getSubsetIndexs(int[] subset, int[] superset) {
+        int[] indexs = new int[subset.length];
+        for (int i = 0; i < subset.length; i++) {
+            int index = indexOf(superset, subset[i]);
+            if (index == -1) {
+                throw new IllegalArgumentException("数据内容不匹配, 无法创建下标映射表");
+            }
+            indexs[i] = index;
+        }
+        return indexs;
+    }
+
+    /**
+     * 将数组arr初始化
+     */
+    public static void initSerialArray(int[] array) {
+        for (int i = 0; i < array.length; i++) {
+            array[i] = i;
+        }
+    }
+
+    /**
+     * 将数组arr中下标为start+1到end-1的数据向左移一位
+     * 同时将下标为start的数据放在下标end-1处
+     * @param array 待操作的数据
+     * @param start 移位起始下标
+     * @param end 移位终止下标（不包括）
+     */
+    public static void arrayLeftShift(int[] array, int start, int end) {
+        int temp = array[start];
+        for (int i = start; i < end-1; i++) {
+            array[i] = array[i+1];
+        }
+        array[end-1] = temp;
+    }
+
+    /**
+     * 将数组arr中下标为start到end-2的数据向右移一位
+     * 同时将下标为end-1的数据放在下标start处
+     * @param array 待操作的数据
+     * @param start 移位起始下标
+     * @param end 移位终止下标（不包括）
+     */
+    public static void arrayRightShift(int[] array, int start, int end) {
+        int temp = array[end-1];
+        for (int i = end-1; i > start; i--) {
+            array[i] = array[i-1];
+        }
+        array[start] = temp;
+    }
 }

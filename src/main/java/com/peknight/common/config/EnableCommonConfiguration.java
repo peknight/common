@@ -1,6 +1,5 @@
-package com.peknight.common.annotation;
+package com.peknight.common.config;
 
-import com.peknight.common.CommonApplication;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.Documented;
@@ -19,6 +18,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({CommonApplication.class})
+@Import({CommonConfig.class})
 public @interface EnableCommonConfiguration {
 }

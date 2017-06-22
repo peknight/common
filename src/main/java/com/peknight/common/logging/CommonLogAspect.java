@@ -30,6 +30,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -44,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Aspect
 public class CommonLogAspect {
-    private static final Map<Method, long[]> AVG_TIME = new ConcurrentHashMap<>();
+    private static final Map<Method, StopWatch> EXECUTE_TIME = new ConcurrentHashMap<>();
 
     @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
@@ -67,11 +68,11 @@ public class CommonLogAspect {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
-        if (!AVG_TIME.containsKey(method)) {
-            AVG_TIME.put(method, new long[2]);
+        if (!EXECUTE_TIME.containsKey(method)) {
+            EXECUTE_TIME.put(method, new StopWatch());
         }
-        long index = AVG_TIME.get(method)[1] + 1;
-        AVG_TIME.get(method)[1] = index;
+        StopWatch stopWatch = EXECUTE_TIME.get(method);
+        int index = stopWatch.getTaskCount();
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
@@ -83,80 +84,74 @@ public class CommonLogAspect {
             }
         }
 
-        preLogger(logger, level, beginMargin, method.getName(), index, paramStringBuilder);
+        String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
+        preLogger(logger, level, beginMargin, methodInfo, paramStringBuilder);
 
-        long start = System.currentTimeMillis();
-        long end, time, avgTime;
+        stopWatch.start(methodInfo);
 
         try {
             Object object = proceedingJoinPoint.proceed();
-            end = System.currentTimeMillis();
-            time = end -start;
-            AVG_TIME.get(method)[0] = AVG_TIME.get(method)[0] + time;
-            avgTime = AVG_TIME.get(method)[0]/AVG_TIME.get(method)[1];
-            postLogger(logger, level, endMargin, method.getName(), index, time, avgTime, method.getReturnType().getSimpleName(), object);
+            stopWatch.stop();
+            postLogger(logger, level, endMargin, methodInfo, stopWatch.getLastTaskTimeMillis(), stopWatch.getTotalTimeMillis() / stopWatch.getTaskCount(), method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
-            end = System.currentTimeMillis();
-            time = end - start;
-            AVG_TIME.get(method)[0] = AVG_TIME.get(method)[0] + time;
-            avgTime = AVG_TIME.get(method)[0]/AVG_TIME.get(method)[1];
-            postExceptionLogger(logger, exceptionMargin, method.getName(), index, time, avgTime, method.getReturnType().getSimpleName(), e.toString());
+            stopWatch.stop();
+            postExceptionLogger(logger, exceptionMargin, methodInfo, stopWatch.getLastTaskTimeMillis(), stopWatch.getTotalTimeMillis() / stopWatch.getTaskCount(), method.getReturnType().getSimpleName(), e.toString());
             throw e;
         }
     }
 
-    private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String beginMargin, String methodName,
-                                  long index, StringBuilder paramStringBuilder) {
-        String loggerFormat = "{}{}[{}] Begin\tParamList: [{}]";
+    private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String beginMargin, String methodInfo,
+                                  StringBuilder paramStringBuilder) {
+        String loggerFormat = "{}{} Begin\tParamList: [{}]";
         switch (level) {
             case TRACE:
-                logger.trace(loggerFormat, beginMargin, methodName, index, paramStringBuilder);
+                logger.trace(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
                 return;
             case DEBUG:
-                logger.debug(loggerFormat, beginMargin, methodName, index, paramStringBuilder);
+                logger.debug(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
                 return;
             case INFO:
-                logger.info(loggerFormat, beginMargin, methodName, index, paramStringBuilder);
+                logger.info(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
                 return;
             case WARN:
-                logger.warn(loggerFormat, beginMargin, methodName, index, paramStringBuilder);
+                logger.warn(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
                 return;
             case ERROR:
-                logger.error(loggerFormat, beginMargin, methodName, index, paramStringBuilder);
+                logger.error(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
                 return;
             default:
                 return;
         }
     }
 
-    private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String endMargin, String methodName,
-                                   long index, long time, long avgTime, String returnType, Object returnObj) {
-        String loggerFormat = "{}{}[{}] End\t[Time: {}ms, AvgTime: {}ms]\tReturn ({}): {}";
+    private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String endMargin, String methodInfo,
+                                   long time, long avgTime, String returnType, Object returnObj) {
+        String loggerFormat = "{}{} End\t[Time: {}ms, AvgTime: {}ms]\tReturn ({}): {}";
         switch (level) {
             case TRACE:
-                logger.trace(loggerFormat, endMargin, methodName, index, time, avgTime, returnType, returnObj);
+                logger.trace(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case DEBUG:
-                logger.debug(loggerFormat, endMargin, methodName, index, time, avgTime, returnType, returnObj);
+                logger.debug(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case INFO:
-                logger.info(loggerFormat, endMargin, methodName, index, time, avgTime, returnType, returnObj);
+                logger.info(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case WARN:
-                logger.warn(loggerFormat, endMargin, methodName, index, time, avgTime, returnType, returnObj);
+                logger.warn(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case ERROR:
-                logger.error(loggerFormat, endMargin, methodName, index, time, avgTime, returnType, returnObj);
+                logger.error(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             default:
                 return;
         }
     }
 
-    private static void postExceptionLogger(Logger logger, String exceptionMargin, String methodName, long index,
+    private static void postExceptionLogger(Logger logger, String exceptionMargin, String methodInfo,
                                             long time, long avgTime, String returnType, String exception) {
-        String loggerFormat = "{}{}[{}] Exception\t[Time: {}ms, AvgTime: {}ms]\tReturnType: {}\tExceptionMessage: {}";
-        logger.error(loggerFormat, exceptionMargin, methodName, index, time, avgTime, returnType, exception);
+        String loggerFormat = "{}{} Exception\t[Time: {}ms, AvgTime: {}ms]\tReturnType: {}\tExceptionMessage: {}";
+        logger.error(loggerFormat, exceptionMargin, methodInfo, time, avgTime, returnType, exception);
     }
 }

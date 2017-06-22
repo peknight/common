@@ -41,7 +41,7 @@
 
 #### logging 包
 
-通用日志输出，在方法上添加@CommonLog注解将被CommonLogAspect拦截并输出方法执行日志。
+通用日志输出，在方法/类上添加@CommonLog注解将被CommonLogAspect拦截并输出方法执行参数、返回值、用时等信息。
 resources中logback目录下提供了通用的日志输出配置。
 此配置根据SpringBoot默认日志配置修改而来，区别在于日志文件按天输出。
 

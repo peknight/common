@@ -1,5 +1,6 @@
 package com.peknight.common.logging;
 
+import com.peknight.common.string.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Common Log Aspect
+ * 通用日志切面
  *
  * @author PeKnight
  *
@@ -22,19 +23,25 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CommonLogAspect {
     private static final Map<Method, long[]> AVG_TIME = new ConcurrentHashMap<>();
 
-    @Around("@annotation(com.peknight.common.logging.CommonLog)")
+    @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
-        Method method = signature.getMethod();
-        CommonLog commonLog = method.getDeclaredAnnotation(CommonLog.class);
-        String beginMargin = commonLog.beginMargin();
-        String endMargin = commonLog.endMargin();
-        String exceptionMargin = commonLog.exceptionMargin();
+        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        CommonLog commonLog;
+        if (method.isAnnotationPresent(CommonLog.class)) {
+            commonLog = method.getDeclaredAnnotation(CommonLog.class);
+        } else {
+            commonLog = method.getDeclaringClass().getDeclaredAnnotation(CommonLog.class);
+        }
+        String margin = commonLog.value();
+        String beginMargin = StringUtils.isEmpty(commonLog.beginMargin()) ? margin : commonLog.beginMargin();
+        String endMargin = StringUtils.isEmpty(commonLog.endMargin()) ? margin : commonLog.endMargin();
+        String exceptionMargin = StringUtils.isEmpty(commonLog.exceptionMargin()) ? margin : commonLog.exceptionMargin();
         CommonLog.LoggingLevel level = commonLog.level();
-        return commonLog(proceedingJoinPoint, method, beginMargin, endMargin, exceptionMargin, level);
+        return commonLog(proceedingJoinPoint, beginMargin, endMargin, exceptionMargin, level);
     }
 
-    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, Method method, String beginMargin, String endMargin, String exceptionMargin, CommonLog.LoggingLevel level) throws Throwable {
+    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, String beginMargin, String endMargin, String exceptionMargin, CommonLog.LoggingLevel level) throws Throwable {
+        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
         if (!AVG_TIME.containsKey(method)) {
@@ -48,7 +55,8 @@ public class CommonLogAspect {
                 if (i > 0) {
                     paramStringBuilder.append(", ");
                 }
-                paramStringBuilder.append("Param" + (i + 1)+ " (" + args[i].getClass().getSimpleName() + "): " + args[i]);
+                paramStringBuilder.append("Param").append(i + 1)
+                        .append(" (").append(args[i].getClass().getSimpleName()).append("): ").append(args[i]);
             }
         }
 
@@ -77,7 +85,7 @@ public class CommonLogAspect {
 
     private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String beginMargin, String methodName,
                                   long index, StringBuilder paramStringBuilder) {
-        String loggerFormat = "{} {}[{}] Begin\tParamList: [{}]";
+        String loggerFormat = "{}{}[{}] Begin\tParamList: [{}]";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, beginMargin, methodName, index, paramStringBuilder);
@@ -101,7 +109,7 @@ public class CommonLogAspect {
 
     private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String endMargin, String methodName,
                                    long index, long time, long avgTime, String returnType, Object returnObj) {
-        String loggerFormat = "{} {}[{}] End\t[Time: {}ms, AvgTime: {}ms]\tReturn ({}): {}";
+        String loggerFormat = "{}{}[{}] End\t[Time: {}ms, AvgTime: {}ms]\tReturn ({}): {}";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, endMargin, methodName, index, time, avgTime, returnType, returnObj);
@@ -125,7 +133,7 @@ public class CommonLogAspect {
 
     private static void postExceptionLogger(Logger logger, String exceptionMargin, String methodName, long index,
                                             long time, long avgTime, String returnType, String exception) {
-        String loggerFormat = "{} {}[{}] Exception\t[Time: {}ms, AvgTime: {}ms]\tReturnType: {}\tExceptionMessage: {}";
+        String loggerFormat = "{}{}[{}] Exception\t[Time: {}ms, AvgTime: {}ms]\tReturnType: {}\tExceptionMessage: {}";
         logger.error(loggerFormat, exceptionMargin, methodName, index, time, avgTime, returnType, exception);
     }
 }

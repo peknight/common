@@ -65,4 +65,8 @@ public final class StringUtils {
         chars[0] = Character.toLowerCase(chars[0]);
         return new String(chars);
     }
+
+    public static boolean isEmpty(String string) {
+        return string == null || string.length() == 0;
+    }
 }

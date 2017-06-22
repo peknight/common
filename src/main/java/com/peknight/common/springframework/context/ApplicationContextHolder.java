@@ -18,12 +18,12 @@ import org.springframework.stereotype.Component;
 public class ApplicationContextHolder implements ApplicationContextAware {
     private static ApplicationContext applicationContext;
 
-    public static void contextLoads(Class<?> clazz, String[] args) {
+    public static void run(Class<?> clazz, String[] args) {
         SpringApplication application = new SpringApplication(clazz);
         applicationContext = application.run(args);
     }
 
-    public static void contextLoads(Class<?> clazz, String[] args, Banner.Mode mode) {
+    public static void run(Class<?> clazz, String[] args, Banner.Mode mode) {
         SpringApplication application = new SpringApplication(clazz);
         application.setBannerMode(mode);
         applicationContext = application.run(args);

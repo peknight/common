@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  *
  * Created by PeKnight on 2017/6/21.
  */
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ElementType.METHOD, ElementType.TYPE, ElementType.PACKAGE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface CommonLog {

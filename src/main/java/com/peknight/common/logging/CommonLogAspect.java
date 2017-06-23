@@ -72,7 +72,7 @@ public class CommonLogAspect {
             EXECUTE_TIME.put(method, new StopWatch());
         }
         StopWatch stopWatch = EXECUTE_TIME.get(method);
-        int index = stopWatch.getTaskCount();
+        int index = stopWatch.getTaskCount() + 1;
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {

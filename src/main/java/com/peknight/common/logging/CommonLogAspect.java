@@ -103,7 +103,7 @@ public class CommonLogAspect {
 
     private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String beginMargin, String methodInfo,
                                   StringBuilder paramStringBuilder) {
-        String loggerFormat = "{}{} Begin\tParamList: [{}]";
+        String loggerFormat = paramStringBuilder.length() == 0 ? "{}{} Begin" : "{}{} Begin\tParamList: [{}]";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
@@ -127,7 +127,7 @@ public class CommonLogAspect {
 
     private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String endMargin, String methodInfo,
                                    long time, long avgTime, String returnType, Object returnObj) {
-        String loggerFormat = "{}{} End\t[Time: {}ms, AvgTime: {}ms]\tReturn ({}): {}";
+        String loggerFormat = "void".equals(returnType) ? "{}{} End	[Time: {}ms, AvgTime: {}ms]" : "{}{} End\t[Time: {}ms, AvgTime: {}ms]\tReturn ({}): {}";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);

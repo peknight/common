@@ -51,6 +51,8 @@ public @interface CommonLog {
 
     String exceptionMargin() default "";
 
+    boolean keepTaskList() default false;
+
     LoggingLevel level() default LoggingLevel.DEBUG;
 
     enum LoggingLevel {

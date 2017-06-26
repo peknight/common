@@ -60,16 +60,19 @@ public class CommonLogAspect {
         String beginMargin = StringUtils.isEmpty(commonLog.beginMargin()) ? margin : commonLog.beginMargin();
         String endMargin = StringUtils.isEmpty(commonLog.endMargin()) ? margin : commonLog.endMargin();
         String exceptionMargin = StringUtils.isEmpty(commonLog.exceptionMargin()) ? margin : commonLog.exceptionMargin();
+        boolean keepTaskList = commonLog.keepTaskList();
         CommonLog.LoggingLevel level = commonLog.level();
-        return commonLog(proceedingJoinPoint, beginMargin, endMargin, exceptionMargin, level);
+        return commonLog(proceedingJoinPoint, beginMargin, endMargin, exceptionMargin, keepTaskList, level);
     }
 
-    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, String beginMargin, String endMargin, String exceptionMargin, CommonLog.LoggingLevel level) throws Throwable {
+    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, String beginMargin, String endMargin, String exceptionMargin, boolean keepTaskList, CommonLog.LoggingLevel level) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
         if (!EXECUTE_TIME.containsKey(method)) {
-            EXECUTE_TIME.put(method, new StopWatch());
+            StopWatch stopWatch = new StopWatch(method.getName());
+            stopWatch.setKeepTaskList(keepTaskList);
+            EXECUTE_TIME.put(method, stopWatch);
         }
         StopWatch stopWatch = EXECUTE_TIME.get(method);
         int index = stopWatch.getTaskCount() + 1;

@@ -23,7 +23,9 @@
  */
 package com.peknight.common.collection;
 
-import java.util.Arrays;
+import org.springframework.util.Assert;
+
+import java.util.Comparator;
 
 /**
  * 数组工具类
@@ -45,7 +47,7 @@ public final class ArrayUtils {
      * 使用二分查找法
      */
     public static int sortedIndexOf(int key, int... array) {
-        Arrays.sort(array);
+        Assert.isTrue(isSorted(array), "Not Sorted!");
         int lo = 0;
         int hi = array.length - 1;
         while (lo <= hi) {
@@ -71,7 +73,7 @@ public final class ArrayUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> int sortedIndexOf(Comparable<T> key, Comparable<T>... array) {
-        Arrays.sort(array);
+        Assert.isTrue(isSorted(array), "Not Sorted!");
         int lo = 0;
         int hi = array.length - 1;
         while (lo <= hi) {
@@ -177,5 +179,69 @@ public final class ArrayUtils {
             array[i] = array[i-1];
         }
         array[start] = temp;
+    }
+
+    /***************************************************************************
+     *  Helper sorting functions.
+     ***************************************************************************/
+
+    // is v < w ?
+    private static boolean less(Comparable v, Comparable w) {
+        return v.compareTo(w) < 0;
+    }
+
+    // is v < w ?
+    private static boolean less(Object v, Object w, Comparator comparator) {
+        return comparator.compare(v, w) < 0;
+    }
+
+    // exchange a[i] and a[j]
+    private static void exch(Object[] a, int i, int j) {
+        Object swap = a[i];
+        a[i] = a[j];
+        a[j] = swap;
+    }
+
+    // exchange a[i] and a[j]  (for indirect sort)
+    private static void exch(int[] a, int i, int j) {
+        int swap = a[i];
+        a[i] = a[j];
+        a[j] = swap;
+    }
+
+    /***************************************************************************
+     *  Check if array is sorted - useful for debugging.
+     ***************************************************************************/
+    private static boolean isSorted(Comparable[] a) {
+        return isSorted(a, 0, a.length - 1);
+    }
+
+    // is the array sorted from a[lo] to a[hi]
+    private static boolean isSorted(Comparable[] a, int lo, int hi) {
+        for (int i = lo+1; i <= hi; i++)
+            if (less(a[i], a[i-1])) return false;
+        return true;
+    }
+
+    private static boolean isSorted(Object[] a, Comparator comparator) {
+        return isSorted(a, 0, a.length - 1, comparator);
+    }
+
+    // is the array sorted from a[lo] to a[hi]
+    private static boolean isSorted(Object[] a, int lo, int hi, Comparator comparator) {
+        for (int i = lo + 1; i <= hi; i++)
+            if (less(a[i], a[i-1], comparator)) return false;
+        return true;
+    }
+
+    private static boolean isSorted(int[] a) {
+        return isSorted(a, 0, a.length - 1);
+    }
+
+    // is the array sorted from a[lo] to a[hi]  (for indirect sort)
+    private static boolean isSorted(int[] a, int lo, int hi) {
+        for (int i = lo+1; i <= hi; i++)
+            if (a[i] < a[i-1]) return false;
+        return true;
     }
 }

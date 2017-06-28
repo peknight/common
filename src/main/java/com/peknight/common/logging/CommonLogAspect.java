@@ -23,6 +23,7 @@
  */
 package com.peknight.common.logging;
 
+import com.peknight.common.annotation.Param;
 import com.peknight.common.string.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -87,8 +88,8 @@ public class CommonLogAspect {
                 paramStringBuilder.append("(").append(args[i].getClass().getSimpleName()).append(" ");
                 String paramName = null;
                 for (Annotation annotation : annotations[i]) {
-                    if (annotation.annotationType() == ParamName.class) {
-                        paramName = ((ParamName) annotation).value();
+                    if (annotation.annotationType() == Param.class) {
+                        paramName = ((Param) annotation).value();
                     }
                 }
                 if (paramName == null) {

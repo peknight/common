@@ -24,7 +24,6 @@
 package com.peknight.common.string;
 
 import java.util.Arrays;
-import java.util.HashSet;
 
 /**
  * String工具类

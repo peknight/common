@@ -83,7 +83,7 @@ public class CommonLogAspect {
                     paramStringBuilder.append(", ");
                 }
                 paramStringBuilder.append("Param").append(i + 1)
-                        .append(" (").append(args[i].getClass().getSimpleName()).append("): ").append(args[i]);
+                        .append(" (").append(args[i].getClass().getSimpleName()).append("): ").append(StringUtils.toString(args[i]));
             }
         }
 

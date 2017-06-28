@@ -23,6 +23,9 @@
  */
 package com.peknight.common.string;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 /**
  * String工具类
  *
@@ -91,5 +94,35 @@ public final class StringUtils {
 
     public static boolean isEmpty(String string) {
         return string == null || string.length() == 0;
+    }
+
+    public static <T> String toString(T t) {
+        if (t == null) {
+            return null;
+        }
+        Class<?> tClass = t.getClass();
+        if (tClass.isArray()) {
+            if (tClass == byte[].class)
+                return Arrays.toString((byte[]) t);
+            else if (tClass == short[].class)
+                return Arrays.toString((short[]) t);
+            else if (tClass == int[].class)
+                return Arrays.toString((int[]) t);
+            else if (tClass == long[].class)
+                return Arrays.toString((long[]) t);
+            else if (tClass == char[].class)
+                return Arrays.toString((char[]) t);
+            else if (tClass == float[].class)
+                return Arrays.toString((float[]) t);
+            else if (tClass == double[].class)
+                return Arrays.toString((double[]) t);
+            else if (tClass == boolean[].class)
+                return Arrays.toString((boolean[]) t);
+            else { // t is an array of object references
+                return Arrays.deepToString((Object[]) t);
+            }
+        } else {  // t is non-null and not an array
+            return t.toString();
+        }
     }
 }

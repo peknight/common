@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,6 +69,7 @@ public class CommonLogAspect {
     public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, String beginMargin, String endMargin, String exceptionMargin, boolean keepTaskList, CommonLog.LoggingLevel level) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
+        Annotation[][] annotations = method.getParameterAnnotations();
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
         if (!EXECUTE_TIME.containsKey(method)) {
             StopWatch stopWatch = new StopWatch(method.getName());
@@ -82,8 +84,19 @@ public class CommonLogAspect {
                 if (i > 0) {
                     paramStringBuilder.append(", ");
                 }
-                paramStringBuilder.append("Param").append(i + 1)
-                        .append(" (").append(args[i].getClass().getSimpleName()).append("): ").append(StringUtils.toString(args[i]));
+                paramStringBuilder.append("(").append(args[i].getClass().getSimpleName()).append(" ");
+                String paramName = null;
+                for (Annotation annotation : annotations[i]) {
+                    if (annotation.annotationType() == ParamName.class) {
+                        paramName = ((ParamName) annotation).value();
+                    }
+                }
+                if (paramName == null) {
+                    paramStringBuilder.append("arg").append(i);
+                } else {
+                    paramStringBuilder.append(paramName);
+                }
+                paramStringBuilder.append(") ").append(StringUtils.toString(args[i]));
             }
         }
 
@@ -106,7 +119,7 @@ public class CommonLogAspect {
 
     private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String beginMargin, String methodInfo,
                                   StringBuilder paramStringBuilder) {
-        String loggerFormat = paramStringBuilder.length() == 0 ? "{}{} Begin" : "{}{} Begin\tParamList: [{}]";
+        String loggerFormat = paramStringBuilder.length() == 0 ? "{}{} Begin" : "{}{} Begin\tArgs: [{}]";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
@@ -130,7 +143,7 @@ public class CommonLogAspect {
 
     private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String endMargin, String methodInfo,
                                    long time, long avgTime, String returnType, Object returnObj) {
-        String loggerFormat = "void".equals(returnType) ? "{}{} End	[Time: {}ms, AvgTime: {}ms]" : "{}{} End\t[Time: {}ms, AvgTime: {}ms]\tReturn ({}): {}";
+        String loggerFormat = "void".equals(returnType) ? "{}{} End	[Time: {}ms, AvgTime: {}ms]" : "{}{} End\t[Time: {}ms, AvgTime: {}ms]\tReturn: ({}) {}";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);

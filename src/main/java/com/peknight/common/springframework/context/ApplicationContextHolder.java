@@ -37,7 +37,6 @@ import org.springframework.stereotype.Component;
  *
  * Created by PeKnight on 2017/6/21.
  */
-@Component
 public class ApplicationContextHolder implements ApplicationContextAware {
     private static ApplicationContext applicationContext;
 

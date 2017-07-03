@@ -24,6 +24,8 @@
 package com.peknight.common.string;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * String工具类
@@ -33,13 +35,33 @@ import java.util.Arrays;
  * Created by PeKnight on 2017/6/12.
  */
 public final class StringUtils {
+    public static final char UNDERLINE = '_';
+
     private StringUtils() {}
+
+    public static String toUnderline(String origin) {
+        if (isEmpty(origin)) {
+            return origin;
+        }
+        StringBuilder builder = new StringBuilder("");
+        Pattern pattern = Pattern.compile("(?:^[^A-Z]+)|(?:[A-Z]+[^A-Z]+)|(?:[A-Z]+$)");
+        Matcher matcher = pattern.matcher(origin);
+        while (matcher.find()) {
+            String subString = matcher.group(0);
+            if (matcher.start() != 0) {
+                builder.append(UNDERLINE);
+            }
+            builder.append(underlineToCamelCase(subString));
+        }
+
+        return builder.toString();
+    }
 
     /**
      * 将字符串转换为帕斯卡命名法（大驼峰命名法）
      */
-    public static String toPascalCase(String origin) {
-        if (origin == null || origin.length() == 0) {
+    public static String underlineToPascalCase(String origin) {
+        if (isEmpty(origin)) {
             return origin;
         }
         if (origin.indexOf('_') != -1) {
@@ -49,7 +71,7 @@ public final class StringUtils {
                 if (split.length() == 0) {
                     continue;
                 }
-                builder.append(toPascalCase(split));
+                builder.append(underlineToPascalCase(split));
             }
             return builder.toString();
         }
@@ -65,19 +87,19 @@ public final class StringUtils {
      * 将字符串转换为驼峰命名法
      * 注: 如果前两个字母均为大写，那么首字母不会转换为小写
      */
-    public static String toCamelCase(String origin) {
-        if (origin == null || origin.length() == 0) {
+    public static String underlineToCamelCase(String origin) {
+        if (isEmpty(origin)) {
             return origin;
         }
         if (origin.indexOf('_') != -1) {
             String[] splits = origin.split("_");
             StringBuilder builder = new StringBuilder("");
-            builder.append(toCamelCase(splits[0]));
+            builder.append(underlineToCamelCase(splits[0]));
             for (int i = 1; i < splits.length; i++) {
                 if (splits[i].length() == 0) {
                     continue;
                 }
-                builder.append(toPascalCase(splits[i]));
+                builder.append(underlineToPascalCase(splits[i]));
             }
             return builder.toString();
         }

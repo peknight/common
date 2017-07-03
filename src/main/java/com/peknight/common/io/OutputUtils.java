@@ -34,9 +34,9 @@ import java.io.UnsupportedEncodingException;
  * Created by PeKnight on 2017/6/12.
  */
 public final class OutputUtils {
-    public static final String KEY_SEPARATOR = "\t";
+    public static final String KEY_SEPARATOR = ", ";
 
-    public static final String MAP_SEPARATOR = "\t";
+    public static final String MAP_SEPARATOR = ", ";
 
     public static final String FILE_SEPARATOR = "\n";
 

@@ -23,8 +23,6 @@
  */
 package com.peknight.common.collection;
 
-import org.springframework.util.Assert;
-
 import java.util.Comparator;
 
 /**
@@ -47,7 +45,6 @@ public final class ArrayUtils {
      * 使用二分查找法
      */
     public static int sortedIndexOf(int key, int... array) {
-        Assert.isTrue(isSorted(array), "Not Sorted!");
         int lo = 0;
         int hi = array.length - 1;
         while (lo <= hi) {
@@ -73,7 +70,6 @@ public final class ArrayUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> int sortedIndexOf(Comparable<T> key, Comparable<T>... array) {
-        Assert.isTrue(isSorted(array), "Not Sorted!");
         int lo = 0;
         int hi = array.length - 1;
         while (lo <= hi) {

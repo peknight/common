@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 通用日志切面
+ * Common Log Aspect
  *
  * @author PeKnight
  *

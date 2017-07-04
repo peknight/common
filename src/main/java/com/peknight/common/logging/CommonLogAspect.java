@@ -120,7 +120,7 @@ public class CommonLogAspect {
 
     private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String beginMargin, String methodInfo,
                                   StringBuilder paramStringBuilder) {
-        String loggerFormat = paramStringBuilder.length() == 0 ? "{}{} [Begin]" : "{}{} [Begin] Args: [{}]";
+        String loggerFormat = paramStringBuilder.length() == 0 ? "[Begin] {}{}" : "[Begin] {}{} Args: [{}]";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
@@ -144,7 +144,7 @@ public class CommonLogAspect {
 
     private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String endMargin, String methodInfo,
                                    long time, long avgTime, String returnType, Object returnObj) {
-        String loggerFormat = "void".equals(returnType) ? "{}{} [  End] [Time: {}ms, AvgTime: {}ms]" : "{}{} [  End] [Time: {}ms, AvgTime: {}ms] Return: ({}) {}";
+        String loggerFormat = "void".equals(returnType) ? "[  End] {}{} [Time: {}ms, AvgTime: {}ms]" : "[  End] {}{} [Time: {}ms, AvgTime: {}ms] Return: ({}) {}";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
@@ -168,7 +168,7 @@ public class CommonLogAspect {
 
     private static void postExceptionLogger(Logger logger, String exceptionMargin, String methodInfo,
                                             long time, long avgTime, String returnType, String exception) {
-        String loggerFormat = "void".equals(returnType) ? "{}{} [Error] [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "{}{} [Error] [Time: {}ms, AvgTime: {}ms] ReturnType: {} ExceptionMessage: {}";
+        String loggerFormat = "void".equals(returnType) ? "[Error] {}{} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "[Error] {}{} [Time: {}ms, AvgTime: {}ms] ReturnType: {} ExceptionMessage: {}";
         logger.error(loggerFormat, exceptionMargin, methodInfo, time, avgTime, returnType, exception);
     }
 }

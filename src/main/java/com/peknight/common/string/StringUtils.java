@@ -43,74 +43,80 @@ public final class StringUtils {
         if (isEmpty(origin)) {
             return origin;
         }
-        StringBuilder builder = new StringBuilder("");
-        Pattern pattern = Pattern.compile("(?:^[^A-Z]+)|(?:[A-Z]+[^A-Z]+)|(?:[A-Z]+$)");
-        Matcher matcher = pattern.matcher(origin);
-        while (matcher.find()) {
-            String subString = matcher.group(0);
-            if (matcher.start() != 0) {
-                builder.append(UNDERLINE);
-            }
-            builder.append(underlineToCamelCase(subString));
-        }
 
+        StringBuilder builder = new StringBuilder();
+        int length = origin.length();
+
+        builder.append(Character.toLowerCase(origin.charAt(0)));
+        for (int i = 1; i < length; i++) {
+            char c = origin.charAt(i);
+            if (Character.isUpperCase(c)) {
+                builder.append(UNDERLINE).append(Character.toLowerCase(c));
+            } else {
+                builder.append(c);
+            }
+        }
         return builder.toString();
     }
 
     /**
      * 将字符串转换为帕斯卡命名法（大驼峰命名法）
      */
-    public static String underlineToPascalCase(String origin) {
+    public static String underlineToPascal(String origin) {
         if (isEmpty(origin)) {
             return origin;
         }
-        if (origin.indexOf('_') != -1) {
-            String[] splits = origin.split("_");
-            StringBuilder builder = new StringBuilder("");
-            for (String split : splits) {
-                if (split.length() == 0) {
-                    continue;
-                }
-                builder.append(underlineToPascalCase(split));
+
+        StringBuilder builder = new StringBuilder();
+        boolean toUpperCase = true;
+        int length = origin.length();
+
+        for (int i = 0; i < length; i++) {
+            char c = origin.charAt(i);
+            if (UNDERLINE == c) {
+                toUpperCase = true;
+            } else if (toUpperCase) {
+                builder.append(Character.toUpperCase(c));
+                toUpperCase = false;
+            } else {
+                builder.append(c);
             }
-            return builder.toString();
         }
-        if (Character.isUpperCase(origin.charAt(0))) {
-            return origin;
-        }
-        char[] chars = origin.toCharArray();
-        chars[0] = Character.toUpperCase(chars[0]);
-        return new String(chars);
+        return builder.toString();
     }
 
     /**
      * 将字符串转换为驼峰命名法
      * 注: 如果前两个字母均为大写，那么首字母不会转换为小写
      */
-    public static String underlineToCamelCase(String origin) {
+    public static String underlineToCamel(String origin) {
         if (isEmpty(origin)) {
             return origin;
         }
-        if (origin.indexOf('_') != -1) {
-            String[] splits = origin.split("_");
-            StringBuilder builder = new StringBuilder("");
-            builder.append(underlineToCamelCase(splits[0]));
-            for (int i = 1; i < splits.length; i++) {
-                if (splits[i].length() == 0) {
-                    continue;
-                }
-                builder.append(underlineToPascalCase(splits[i]));
+
+        StringBuilder builder = new StringBuilder();
+        boolean toUpperCase = false;
+        int length = origin.length();
+
+        char first = origin.charAt(0);
+        if (length > 1 && Character.isUpperCase(first) && Character.isUpperCase(origin.charAt(1))) {
+            builder.append(first);
+        } else {
+            builder.append(Character.toLowerCase(first));
+        }
+
+        for (int i = 1; i < length; i++) {
+            char c = origin.charAt(i);
+            if (UNDERLINE == c) {
+                toUpperCase = true;
+            } else if (toUpperCase) {
+                builder.append(Character.toUpperCase(c));
+                toUpperCase = false;
+            } else {
+                builder.append(c);
             }
-            return builder.toString();
         }
-        if (Character.isLowerCase(origin.charAt(0)) ||
-                (origin.length() > 1 && Character.isUpperCase(origin.charAt(1)) &&
-                Character.isUpperCase(origin.charAt(0)))){
-            return origin;
-        }
-        char[] chars = origin.toCharArray();
-        chars[0] = Character.toLowerCase(chars[0]);
-        return new String(chars);
+        return builder.toString();
     }
 
     public static boolean isEmpty(String string) {

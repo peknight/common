@@ -31,7 +31,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StopWatch;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -47,7 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Aspect
 public class CommonLogAspect {
-    private static final Map<Method, StopWatch> EXECUTE_TIME = new ConcurrentHashMap<>();
+    private static final Map<Method, long[]> EXECUTE_TIME = new ConcurrentHashMap<>();
 
     @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
@@ -62,23 +61,20 @@ public class CommonLogAspect {
         String beginMargin = StringUtils.isEmpty(commonLog.beginMargin()) ? margin : commonLog.beginMargin();
         String endMargin = StringUtils.isEmpty(commonLog.endMargin()) ? margin : commonLog.endMargin();
         String exceptionMargin = StringUtils.isEmpty(commonLog.exceptionMargin()) ? margin : commonLog.exceptionMargin();
-        boolean keepTaskList = commonLog.keepTaskList();
         CommonLog.LoggingLevel level = commonLog.level();
-        return commonLog(proceedingJoinPoint, beginMargin, endMargin, exceptionMargin, keepTaskList, level);
+        return commonLog(proceedingJoinPoint, beginMargin, endMargin, exceptionMargin, level);
     }
 
-    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, String beginMargin, String endMargin, String exceptionMargin, boolean keepTaskList, CommonLog.LoggingLevel level) throws Throwable {
+    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, String beginMargin, String endMargin, String exceptionMargin, CommonLog.LoggingLevel level) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         Annotation[][] annotations = method.getParameterAnnotations();
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
         if (!EXECUTE_TIME.containsKey(method)) {
-            StopWatch stopWatch = new StopWatch(method.getName());
-            stopWatch.setKeepTaskList(keepTaskList);
-            EXECUTE_TIME.put(method, stopWatch);
+            EXECUTE_TIME.put(method, new long[2]);
         }
-        StopWatch stopWatch = EXECUTE_TIME.get(method);
-        int index = stopWatch.getTaskCount() + 1;
+        long[] executeTime = EXECUTE_TIME.get(method);
+        int index = (int) ++executeTime[1];
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
@@ -104,16 +100,19 @@ public class CommonLogAspect {
         String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
         preLogger(logger, level, beginMargin, methodInfo, paramStringBuilder);
 
-        stopWatch.start(methodInfo);
+        long start = System.currentTimeMillis();
+        long taskTime;
 
         try {
             Object object = proceedingJoinPoint.proceed();
-            stopWatch.stop();
-            postLogger(logger, level, endMargin, methodInfo, stopWatch.getLastTaskTimeMillis(), stopWatch.getTotalTimeMillis() / stopWatch.getTaskCount(), method.getReturnType().getSimpleName(), object);
+            taskTime = System.currentTimeMillis() - start;
+            executeTime[0] += taskTime;
+            postLogger(logger, level, endMargin, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
-            stopWatch.stop();
-            postExceptionLogger(logger, exceptionMargin, methodInfo, stopWatch.getLastTaskTimeMillis(), stopWatch.getTotalTimeMillis() / stopWatch.getTaskCount(), method.getReturnType().getSimpleName(), e.toString());
+            taskTime = System.currentTimeMillis() - start;
+            executeTime[0] += taskTime;
+            postExceptionLogger(logger, exceptionMargin, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), e);
             throw e;
         }
     }
@@ -167,8 +166,8 @@ public class CommonLogAspect {
     }
 
     private static void postExceptionLogger(Logger logger, String exceptionMargin, String methodInfo,
-                                            long time, long avgTime, String returnType, String exception) {
-        String loggerFormat = "void".equals(returnType) ? "{}[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "{}[Error] {} [Time: {}ms, AvgTime: {}ms] ReturnType: {} ExceptionMessage: {}";
-        logger.error(loggerFormat, exceptionMargin, methodInfo, time, avgTime, returnType, exception);
+                                            long time, long avgTime, String returnType, Throwable e) {
+        String loggerFormat = "void".equals(returnType) ? "{}[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "{}[Error] {} [Time: {}ms, AvgTime: {}ms] [ReturnType: {}] Exception: {}";
+        logger.error(loggerFormat, exceptionMargin, methodInfo, time, avgTime, returnType, e.toString(), e);
     }
 }

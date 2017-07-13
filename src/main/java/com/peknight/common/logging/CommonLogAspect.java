@@ -112,7 +112,7 @@ public class CommonLogAspect {
         } catch (Throwable e) {
             taskTime = System.currentTimeMillis() - start;
             executeTime[0] += taskTime;
-            postExceptionLogger(logger, exceptionMargin, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), e);
+            postErrorLogger(logger, exceptionMargin, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), e);
             throw e;
         }
     }
@@ -165,9 +165,9 @@ public class CommonLogAspect {
         }
     }
 
-    private static void postExceptionLogger(Logger logger, String exceptionMargin, String methodInfo,
+    private static void postErrorLogger(Logger logger, String exceptionMargin, String methodInfo,
                                             long time, long avgTime, String returnType, Throwable e) {
-        String loggerFormat = "void".equals(returnType) ? "{}[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "{}[Error] {} [Time: {}ms, AvgTime: {}ms] [ReturnType: {}] Exception: {}";
+        String loggerFormat = "void".equals(returnType) ? "{}[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "{}[Error] {} [Time: {}ms, AvgTime: {}ms] [ReturnType: {}] Error: {}";
         logger.error(loggerFormat, exceptionMargin, methodInfo, time, avgTime, returnType, e.toString(), e);
     }
 }

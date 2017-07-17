@@ -39,7 +39,7 @@ public final class StringUtils {
 
     private StringUtils() {}
 
-    public static String toUnderline(String origin) {
+    public static String toUnderscore(String origin) {
         if (isEmpty(origin)) {
             return origin;
         }
@@ -62,7 +62,7 @@ public final class StringUtils {
     /**
      * 将字符串转换为帕斯卡命名法（大驼峰命名法）
      */
-    public static String underlineToPascal(String origin) {
+    public static String underscoreToPascalCase(String origin) {
         if (isEmpty(origin)) {
             return origin;
         }
@@ -89,7 +89,7 @@ public final class StringUtils {
      * 将字符串转换为驼峰命名法
      * 注: 如果前两个字母均为大写，那么首字母不会转换为小写
      */
-    public static String underlineToCamel(String origin) {
+    public static String underscoreToCamelCase(String origin) {
         if (isEmpty(origin)) {
             return origin;
         }

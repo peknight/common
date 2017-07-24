@@ -86,6 +86,7 @@ public class CommonLogAspect {
                 for (Annotation annotation : annotations[i]) {
                     if (annotation.annotationType() == Param.class) {
                         paramName = ((Param) annotation).value();
+                        break;
                     }
                 }
                 if (paramName == null) {

@@ -43,15 +43,7 @@ import java.lang.annotation.Target;
 @Documented
 public @interface CommonLog {
 
-    String value() default "";
-
-    String beginMargin() default "";
-
-    String endMargin() default "";
-
-    String exceptionMargin() default "";
-
-    LoggingLevel level() default LoggingLevel.DEBUG;
+    LoggingLevel value() default LoggingLevel.DEBUG;
 
     enum LoggingLevel {
         TRACE, DEBUG, INFO, WARN, ERROR

@@ -57,15 +57,11 @@ public class CommonLogAspect {
         } else {
             commonLog = method.getDeclaringClass().getDeclaredAnnotation(CommonLog.class);
         }
-        String margin = commonLog.value();
-        String beginMargin = StringUtils.isEmpty(commonLog.beginMargin()) ? margin : commonLog.beginMargin();
-        String endMargin = StringUtils.isEmpty(commonLog.endMargin()) ? margin : commonLog.endMargin();
-        String exceptionMargin = StringUtils.isEmpty(commonLog.exceptionMargin()) ? margin : commonLog.exceptionMargin();
-        CommonLog.LoggingLevel level = commonLog.level();
-        return commonLog(proceedingJoinPoint, beginMargin, endMargin, exceptionMargin, level);
+        CommonLog.LoggingLevel level = commonLog.value();
+        return commonLog(proceedingJoinPoint, level);
     }
 
-    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, String beginMargin, String endMargin, String exceptionMargin, CommonLog.LoggingLevel level) throws Throwable {
+    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, CommonLog.LoggingLevel level) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         Annotation[][] annotations = method.getParameterAnnotations();
@@ -99,7 +95,7 @@ public class CommonLogAspect {
         }
 
         String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
-        preLogger(logger, level, beginMargin, methodInfo, paramStringBuilder);
+        preLogger(logger, level, methodInfo, paramStringBuilder);
 
         long start = System.currentTimeMillis();
         long taskTime;
@@ -108,67 +104,67 @@ public class CommonLogAspect {
             Object object = proceedingJoinPoint.proceed();
             taskTime = System.currentTimeMillis() - start;
             executeTime[0] += taskTime;
-            postLogger(logger, level, endMargin, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), object);
+            postLogger(logger, level, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
             taskTime = System.currentTimeMillis() - start;
             executeTime[0] += taskTime;
-            postErrorLogger(logger, exceptionMargin, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), e);
+            postErrorLogger(logger, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), e);
             throw e;
         }
     }
 
-    private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String beginMargin, String methodInfo,
+    private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String methodInfo,
                                   StringBuilder paramStringBuilder) {
-        String loggerFormat = paramStringBuilder.length() == 0 ? "{}[Begin] {}" : "{}[Begin] {} Args: [{}]";
+        String loggerFormat = paramStringBuilder.length() == 0 ? "[Begin] {}" : "[Begin] {} Args: [{}]";
         switch (level) {
             case TRACE:
-                logger.trace(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
+                logger.trace(loggerFormat, methodInfo, paramStringBuilder);
                 return;
             case DEBUG:
-                logger.debug(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
+                logger.debug(loggerFormat, methodInfo, paramStringBuilder);
                 return;
             case INFO:
-                logger.info(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
+                logger.info(loggerFormat, methodInfo, paramStringBuilder);
                 return;
             case WARN:
-                logger.warn(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
+                logger.warn(loggerFormat, methodInfo, paramStringBuilder);
                 return;
             case ERROR:
-                logger.error(loggerFormat, beginMargin, methodInfo, paramStringBuilder);
+                logger.error(loggerFormat, methodInfo, paramStringBuilder);
                 return;
             default:
                 return;
         }
     }
 
-    private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String endMargin, String methodInfo,
+    private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String methodInfo,
                                    long time, long avgTime, String returnType, Object returnObj) {
-        String loggerFormat = "void".equals(returnType) ? "{}[  End] {} [Time: {}ms, AvgTime: {}ms]" : "{}[  End] {} [Time: {}ms, AvgTime: {}ms] Return: ({}) {}";
+        String loggerFormat = "void".equals(returnType) ? "[  End] {} [Time: {}ms, AvgTime: {}ms]" : "[  End] {} [Time: {}ms, AvgTime: {}ms] Return: ({}) {}";
         switch (level) {
             case TRACE:
-                logger.trace(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
+                logger.trace(loggerFormat, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case DEBUG:
-                logger.debug(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
+                logger.debug(loggerFormat, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case INFO:
-                logger.info(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
+                logger.info(loggerFormat, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case WARN:
-                logger.warn(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
+                logger.warn(loggerFormat, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             case ERROR:
-                logger.error(loggerFormat, endMargin, methodInfo, time, avgTime, returnType, returnObj);
+                logger.error(loggerFormat, methodInfo, time, avgTime, returnType, returnObj);
                 return;
             default:
                 return;
         }
     }
 
-    private static void postErrorLogger(Logger logger, String exceptionMargin, String methodInfo,
+    private static void postErrorLogger(Logger logger, String methodInfo,
                                             long time, long avgTime, String returnType, Throwable e) {
-        String loggerFormat = "void".equals(returnType) ? "{}[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "{}[Error] {} [Time: {}ms, AvgTime: {}ms] [ReturnType: {}] Error: {}";
-        logger.error(loggerFormat, exceptionMargin, methodInfo, time, avgTime, returnType, e.toString(), e);
+        String loggerFormat = "void".equals(returnType) ? "[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "[Error] {} [Time: {}ms, AvgTime: {}ms] [ReturnType: {}] Error: {}";
+        logger.error(loggerFormat, methodInfo, time, avgTime, returnType, e.toString(), e);
     }
 }

@@ -31,6 +31,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -57,11 +58,11 @@ public class CommonLogAspect {
         } else {
             commonLog = method.getDeclaringClass().getDeclaredAnnotation(CommonLog.class);
         }
-        CommonLog.LoggingLevel level = commonLog.value();
+        Level level = commonLog.value();
         return commonLog(proceedingJoinPoint, level);
     }
 
-    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, CommonLog.LoggingLevel level) throws Throwable {
+    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, Level level) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         Annotation[][] annotations = method.getParameterAnnotations();
@@ -114,7 +115,7 @@ public class CommonLogAspect {
         }
     }
 
-    private static void preLogger(Logger logger, CommonLog.LoggingLevel level, String methodInfo,
+    private static void preLogger(Logger logger, Level level, String methodInfo,
                                   StringBuilder paramStringBuilder) {
         String loggerFormat = paramStringBuilder.length() == 0 ? "[Begin] {}" : "[Begin] {} Args: [{}]";
         switch (level) {
@@ -138,7 +139,7 @@ public class CommonLogAspect {
         }
     }
 
-    private static void postLogger(Logger logger, CommonLog.LoggingLevel level, String methodInfo,
+    private static void postLogger(Logger logger, Level level, String methodInfo,
                                    long time, long avgTime, String returnType, Object returnObj) {
         String loggerFormat = "void".equals(returnType) ? "[  End] {} [Time: {}ms, AvgTime: {}ms]" : "[  End] {} [Time: {}ms, AvgTime: {}ms] Return: ({}) {}";
         switch (level) {

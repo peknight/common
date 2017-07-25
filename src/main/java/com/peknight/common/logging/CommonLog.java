@@ -23,6 +23,8 @@
  */
 package com.peknight.common.logging;
 
+import org.slf4j.event.Level;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -43,9 +45,6 @@ import java.lang.annotation.Target;
 @Documented
 public @interface CommonLog {
 
-    LoggingLevel value() default LoggingLevel.DEBUG;
+    Level value() default Level.DEBUG;
 
-    enum LoggingLevel {
-        TRACE, DEBUG, INFO, WARN, ERROR
-    }
 }

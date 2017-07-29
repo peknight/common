@@ -1,4 +1,5 @@
 log/
+/common/
 
 .mvn/
 mvnw

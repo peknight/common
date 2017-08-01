@@ -1,6 +1,7 @@
 package com.peknight.common.config;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -18,6 +19,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableCommonConfiguration
 @SpringBootApplication
 public @interface PekApplication {

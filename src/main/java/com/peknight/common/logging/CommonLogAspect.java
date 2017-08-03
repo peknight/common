@@ -59,14 +59,18 @@ public class CommonLogAspect {
             commonLog = method.getDeclaringClass().getDeclaredAnnotation(CommonLog.class);
         }
         Level level = commonLog.value();
-        return commonLog(proceedingJoinPoint, level);
+        Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
+        if (isLoggingLevelEnable(logger, level)) {
+            return commonLog(proceedingJoinPoint, logger, level);
+        } else {
+            return proceedingJoinPoint.proceed();
+        }
     }
 
-    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, Level level) throws Throwable {
+    public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, Logger logger, Level level) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         Annotation[][] annotations = method.getParameterAnnotations();
-        Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
         if (!EXECUTE_TIME.containsKey(method)) {
             EXECUTE_TIME.put(method, new long[2]);
         }
@@ -167,5 +171,22 @@ public class CommonLogAspect {
                                             long time, long avgTime, String returnType, Throwable e) {
         String loggerFormat = "void".equals(returnType) ? "[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "[Error] {} [Time: {}ms, AvgTime: {}ms] [ReturnType: {}] Error: {}";
         logger.error(loggerFormat, methodInfo, time, avgTime, returnType, e.toString(), e);
+    }
+
+    public static boolean isLoggingLevelEnable(Logger logger, Level level) {
+        switch (level) {
+            case TRACE:
+                return logger.isTraceEnabled();
+            case DEBUG:
+                return logger.isDebugEnabled();
+            case INFO:
+                return logger.isInfoEnabled();
+            case WARN:
+                return logger.isWarnEnabled();
+            case ERROR:
+                return logger.isErrorEnabled();
+            default:
+                return false;
+        }
     }
 }

@@ -24,8 +24,6 @@
 package com.peknight.common.string;
 
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * String工具类
@@ -39,6 +37,9 @@ public final class StringUtils {
 
     private StringUtils() {}
 
+    /**
+     * 将驼峰命名法的字符串转换为下划线连接的字符串
+     */
     public static String toUnderscore(String origin) {
         if (isEmpty(origin)) {
             return origin;
@@ -123,6 +124,9 @@ public final class StringUtils {
         return string == null || string.length() == 0;
     }
 
+    /**
+     * 通用toString方法，可以直接输出数组、多维数组内的值而不是句柄
+     */
     public static <T> String toString(T t) {
         if (t == null) {
             return null;
@@ -151,5 +155,28 @@ public final class StringUtils {
         } else {  // t is non-null and not an array
             return t.toString();
         }
+    }
+
+    /**
+     * 支持负值参数的substring方法
+     */
+    public static String substring(String origin, int beginIndex) {
+        if (beginIndex < 0) {
+            beginIndex = origin.length() + beginIndex;
+        }
+        return origin.substring(beginIndex);
+    }
+
+    /**
+     * 支持负值参数的substring方法
+     */
+    public static String substring(String origin, int beginIndex, int endIndex) {
+        if (beginIndex < 0) {
+            beginIndex = origin.length() + beginIndex;
+        }
+        if (endIndex < 0) {
+            endIndex = origin.length() + endIndex;
+        }
+        return origin.substring(beginIndex, endIndex);
     }
 }

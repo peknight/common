@@ -23,7 +23,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<fasterxml.jackson.version>2.9.0</fasterxml.jackson.version>
+		<fasterxml.jackson.version>2.8.9</fasterxml.jackson.version>
 	</properties>
 
 	<dependencies>

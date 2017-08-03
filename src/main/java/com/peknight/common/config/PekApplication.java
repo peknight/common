@@ -11,6 +11,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Pek Application Annotation
+ *
  * @author PeKnight
  *
  * Created by PeKnight on 2017/7/29.

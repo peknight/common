@@ -137,13 +137,13 @@ public class ClassMetadata<T> {
 
         ClassMetadata<?> that = (ClassMetadata<?>) o;
 
-        if (tClass != null ? !tClass.equals(that.tClass) : that.tClass != null) return false;
+        if (!tClass.equals(that.tClass)) return false;
         return componentClassMetadataList != null ? componentClassMetadataList.equals(that.componentClassMetadataList) : that.componentClassMetadataList == null;
     }
 
     @Override
     public int hashCode() {
-        int result = tClass != null ? tClass.hashCode() : 0;
+        int result = tClass.hashCode();
         result = 31 * result + (componentClassMetadataList != null ? componentClassMetadataList.hashCode() : 0);
         return result;
     }

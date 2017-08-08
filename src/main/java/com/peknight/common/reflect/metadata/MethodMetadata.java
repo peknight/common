@@ -67,4 +67,28 @@ public class MethodMetadata {
         }
         return returnClassMetadata;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MethodMetadata that = (MethodMetadata) o;
+
+        return method.equals(that.method);
+    }
+
+    @Override
+    public int hashCode() {
+        return method.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "MethodMetadata{" +
+                "method=" + method +
+                ", returnClassMetadata=" + returnClassMetadata +
+                ", paramList=" + paramList +
+                '}';
+    }
 }

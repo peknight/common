@@ -57,4 +57,26 @@ public class ConstructorMetadata<T> {
         return paramList;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ConstructorMetadata<?> that = (ConstructorMetadata<?>) o;
+
+        return constructor.equals(that.constructor);
+    }
+
+    @Override
+    public int hashCode() {
+        return constructor.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "ConstructorMetadata{" +
+                "constructor=" + constructor +
+                ", paramList=" + paramList +
+                '}';
+    }
 }

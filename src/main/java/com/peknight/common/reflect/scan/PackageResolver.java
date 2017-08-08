@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.scanner;
+package com.peknight.common.reflect.scan;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
@@ -43,5 +43,5 @@ public abstract class PackageResolver<T> {
         return targetObject;
     }
 
-    public abstract void resolve(Resource[] resources, MetadataReaderFactory metadataReaderFactory) throws IOException;
+    public abstract void resolve(Resource[] resources, MetadataReaderFactory metadataReaderFactory, ClassNameFilter classNameFilter) throws IOException;
 }

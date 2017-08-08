@@ -21,32 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect;
+package com.peknight.common.reflect.util;
 
-import com.peknight.common.CommonApplication;
-import com.peknight.common.logging.LogUtils;
-import com.peknight.common.reflect.scanner.PackageResolver;
-import com.peknight.common.reflect.scanner.PackageScanner;
-import com.peknight.common.springframework.context.ApplicationContextHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.Banner;
-import org.springframework.util.ClassUtils;
+import com.peknight.common.reflect.scan.ClassNameFilter;
+import com.peknight.common.reflect.scan.CommonClassNameFilter;
+import com.peknight.common.reflect.scan.ImplementClassResolver;
+import com.peknight.common.reflect.scan.PackageScanner;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
+
+import static org.springframework.util.ClassUtils.isPrimitiveOrWrapper;
 
 /**
- *
+ * 类 工具类
  *
  * @author PeKnight
  *
  * Created by PeKnight on 2017/8/4.
  */
-public final class ReflectUtils {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReflectUtils.class);
+public final class ClassUtils {
 
     /**
      * 获取数组类型的最底层元素类型
@@ -63,24 +59,30 @@ public final class ReflectUtils {
      */
     public static boolean isPlainValue(Class<?> clazz) {
         clazz = getFinalComponentClass(clazz);
-        if (ClassUtils.isPrimitiveOrWrapper(clazz) || clazz.isEnum() || String.class.equals(clazz)
+        if (isPrimitiveOrWrapper(clazz) || clazz.isEnum() || String.class.equals(clazz)
                 || Collection.class.isAssignableFrom(clazz)) {
             return true;
         }
         return false;
     }
 
-    public static List<Class> listImplementClass(Class tClass, String... basePackages) throws IOException {
+    /**
+     * 获取给定所有包路径下的所有子类(为了程序稳定，默认过滤掉了部分包中的内容)
+     */
+    public static Set<Class> listImplementClass(Class tClass, String... basePackages) throws IOException {
+        int modifiers = tClass.getModifiers();
+        if (Modifier.isFinal(modifiers)) {
+            return null;
+        }
         ImplementClassResolver resolver = new ImplementClassResolver(tClass);
-        PackageScanner<List<Class>> scanner = new PackageScanner<>(resolver);
+        ClassNameFilter classNameFilter = new CommonClassNameFilter();
+        PackageScanner<Set<Class>> scanner = new PackageScanner<>(resolver, classNameFilter);
         scanner.resolveBasePackages(basePackages);
-        return resolver.getTargetObject();
-    }
-
-    public static void main(String[] args) throws IOException {
-        ApplicationContextHolder.run(CommonApplication.class, args, Banner.Mode.LOG);
-//        LogUtils.info(listImplementClass(List.class, ".*"));
-
-        LogUtils.info(listImplementClass(List.class, "*"));
+        Set<Class> implementClassSet = resolver.getTargetObject();
+        if (implementClassSet.size() == 0) {
+            return null;
+        } else {
+            return implementClassSet;
+        }
     }
 }

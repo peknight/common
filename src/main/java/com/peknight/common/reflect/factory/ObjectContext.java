@@ -21,33 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect;
-
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
+package com.peknight.common.reflect.factory;
 
 /**
- *
+ * 对象容器
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/3.
+ * Created by PeKnight on 2017/8/8.
  */
-public class ConstructorInfo<T> {
-    private Constructor<T> constructor;
+public class ObjectContext {
 
-    public ConstructorInfo(Constructor<T> constructor) {
-        this.constructor = constructor;
-    }
-
-    public List<ObjectInfo> getParamList() {
-        Class<?>[] parameterTypes = this.constructor.getParameterTypes();
-        int length = parameterTypes.length;
-        List<ObjectInfo> paramList = new ArrayList<>(length);
-        for (Class<?> parameterType : parameterTypes) {
-            paramList.add(new ObjectInfo(parameterType));
-        }
-        return paramList;
-    }
 }

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.scanner;
+package com.peknight.common.reflect.scan;
 
 import com.peknight.common.springframework.context.ApplicationContextHolder;
 import org.springframework.core.io.Resource;
@@ -53,20 +53,33 @@ public class PackageScanner<T> {
 
     private PackageResolver<T> packageResolver;
 
+    private ClassNameFilter classNameFilter;
+
     public PackageScanner(PackageResolver<T> packageResolver) {
-        if (ApplicationContextHolder.getApplicationContext() != null) {
-            this.resourcePatternResolver = new PathMatchingResourcePatternResolver(ApplicationContextHolder.getApplicationContext());
+        this(packageResolver, null, null);
+    }
+
+    public PackageScanner(PackageResolver<T> packageResolver, ResourceLoader resourceLoader) {
+        this(packageResolver, resourceLoader, null);
+    }
+
+    public PackageScanner(PackageResolver<T> packageResolver, ClassNameFilter classNameFilter) {
+        this(packageResolver, null, classNameFilter);
+    }
+
+    public PackageScanner(PackageResolver<T> packageResolver, ResourceLoader resourceLoader, ClassNameFilter classNameFilter) {
+        if (resourceLoader == null) {
+            if (ApplicationContextHolder.getApplicationContext() != null) {
+                this.resourcePatternResolver = new PathMatchingResourcePatternResolver(ApplicationContextHolder.getApplicationContext());
+            } else {
+                this.resourcePatternResolver = new PathMatchingResourcePatternResolver();
+            }
         } else {
-            this.resourcePatternResolver = new PathMatchingResourcePatternResolver();
+            this.resourcePatternResolver = new PathMatchingResourcePatternResolver(resourceLoader);
         }
         this.metadataReaderFactory = new CachingMetadataReaderFactory(this.resourcePatternResolver);
         this.packageResolver = packageResolver;
-    }
-
-    public PackageScanner(ResourceLoader resourceLoader, PackageResolver<T> packageResolver) {
-        this.resourcePatternResolver = new PathMatchingResourcePatternResolver(resourceLoader);
-        this.metadataReaderFactory = new CachingMetadataReaderFactory(this.resourcePatternResolver);
-        this.packageResolver = packageResolver;
+        this.classNameFilter = classNameFilter;
     }
 
     public void resolveBasePackage(String basePackage) throws IOException {
@@ -74,7 +87,7 @@ public class PackageScanner<T> {
                 + ClassUtils.convertClassNameToResourcePath(basePackage)
                 + RESOURCE_PATTERN;
         Resource[] resources = resourcePatternResolver.getResources(pattern);
-        packageResolver.resolve(resources, metadataReaderFactory);
+        packageResolver.resolve(resources, metadataReaderFactory, classNameFilter);
     }
 
     public void resolveBasePackages(String... basePackages) throws IOException {

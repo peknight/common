@@ -21,78 +21,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect;
+package com.peknight.common.reflect.scan;
 
-import com.peknight.common.io.OutputUtils;
-import com.peknight.common.logging.LogUtils;
-import com.peknight.common.reflect.scanner.PackageResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- *
+ * 使用Spring包扫描机制实现获取某类型的所有子类
  *
  * @author PeKnight
  *
  * Created by PeKnight on 2017/8/4.
  */
-public class ImplementClassResolver extends PackageResolver<List<Class>> {
+public class ImplementClassResolver extends PackageResolver<Set<Class>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImplementClassResolver.class);
-
-    private static final PrintWriter writer = getWriter();
-
-    private static PrintWriter getWriter() {
-        try {
-            return OutputUtils.getPrintWriter("D:/Error.txt");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     private Class clazz;
 
     public ImplementClassResolver(Class clazz) {
         this.clazz = clazz;
-        this.targetObject = new ArrayList<>();
+        this.targetObject = new HashSet<>();
     }
 
     @Override
-    public void resolve(Resource[] resources, MetadataReaderFactory metadataReaderFactory) throws IOException {
+    public void resolve(Resource[] resources, MetadataReaderFactory metadataReaderFactory, ClassNameFilter classNameFilter) throws IOException {
         for (Resource resource : resources) {
             MetadataReader reader = metadataReaderFactory.getMetadataReader(resource);
-            String className = null;
-            try {
-                className = reader.getClassMetadata().getClassName();
-                if (className.startsWith("java")) {
-                    LogUtils.info(className);
+            String className = reader.getClassMetadata().getClassName();
+            if (classNameFilter == null || classNameFilter.filter(className)) {
+                try {
                     Class tempClass = Class.forName(className);
                     int modifier = tempClass.getModifiers();
                     if (clazz.isAssignableFrom(tempClass) && !Modifier.isInterface(modifier) && !Modifier.isAbstract(modifier)) {
                         targetObject.add(tempClass);
                     }
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error("This will not happened: {}", e.getMessage(), e);
+                    continue;
+                } catch (Throwable e) {
+                    LOGGER.error("Parse Class Name Error[{}]: {}", className, e.getMessage(), e);
+                    continue;
                 }
-            } catch (ClassNotFoundException e) {
-                LOGGER.error("This will not happened: {}", e.getMessage(), e);
-                continue;
-            } catch (Throwable e) {
-                LOGGER.error("Parse Class Name Error[{}]: {}", className, e.getMessage(), e);
-                writer.println(className);
-                continue;
             }
         }
     }

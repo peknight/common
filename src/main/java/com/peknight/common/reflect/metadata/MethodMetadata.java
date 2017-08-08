@@ -21,39 +21,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect;
+package com.peknight.common.reflect.metadata;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * 方法信息
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/3.
+ * Created by PeKnight on 2017/8/8.
  */
-public class ObjectInfo<T> {
-    private Class<T> tClass;
+public class MethodMetadata {
 
-    public ObjectInfo(Class<T> tClass) {
-        this.tClass = tClass;
+    private Method method;
+
+    private ClassMetadata returnClassMetadata;
+
+    private List<ClassMetadata> paramList;
+
+    MethodMetadata(Method method) {
+        this.method = method;
+        getParamList();
+        getReturnClassMetadata();
     }
 
-    public String getClassName() {
-        return tClass.getName();
-    }
-
-    public List<ConstructorInfo<T>> getConstructorList() {
-//        if (ClassUtils.isPrimitiveOrWrapper(tClass) || ClassUtils.isPrimitiveWrapperArray() || ClassUtils.isPrimitiveWrapperArray())
-        Constructor<T>[] constructors = (Constructor<T>[]) tClass.getConstructors();
-        int length = constructors.length;
-        List<ConstructorInfo<T>> constructorList = new ArrayList<>(length);
-        for (Constructor<T> constructor : constructors) {
-            constructorList.add(new ConstructorInfo<T>(constructor));
+    public List<ClassMetadata> getParamList() {
+        if (paramList == null) {
+            Type[] genericParameterTypes = method.getGenericParameterTypes();
+            int length = genericParameterTypes.length;
+            paramList = new ArrayList<>(length);
+            for (Type parameterType : genericParameterTypes) {
+                paramList.add(MetadataContext.getClassMetadata(parameterType));
+            }
         }
-        return constructorList;
+        return paramList;
     }
 
+    public ClassMetadata getReturnClassMetadata() {
+        if (returnClassMetadata == null) {
+            returnClassMetadata = MetadataContext.getClassMetadata(method.getGenericReturnType());
+        }
+        return returnClassMetadata;
+    }
 }

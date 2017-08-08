@@ -58,8 +58,8 @@ public class CommonLogAspect {
         } else {
             commonLog = method.getDeclaringClass().getDeclaredAnnotation(CommonLog.class);
         }
-        Level level = commonLog.value();
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
+        Level level = commonLog.value();
         if (isLoggingLevelEnable(logger, level)) {
             return commonLog(proceedingJoinPoint, logger, level);
         } else {

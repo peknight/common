@@ -35,20 +35,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * 使用Spring包扫描机制实现获取某类型的所有子类
+ *
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/4.
+ * Created by PeKnight on 2017/8/10.
  */
-public class ImplementClassResolver extends PackageResolver<Set<Class>> {
+public class ListClassResolver extends PackageResolver<Set<Class>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImplementClassResolver.class);
 
-    private Class clazz;
-
-    public ImplementClassResolver(Class clazz) {
-        this.clazz = clazz;
+    public ListClassResolver() {
         this.targetObject = new HashSet<>();
     }
 
@@ -60,10 +57,7 @@ public class ImplementClassResolver extends PackageResolver<Set<Class>> {
             if (classNameFilter == null || classNameFilter.classNameFilter(className)) {
                 try {
                     Class tempClass = Class.forName(className);
-                    int modifier = tempClass.getModifiers();
-                    if (clazz.isAssignableFrom(tempClass) && !Modifier.isInterface(modifier) && !Modifier.isAbstract(modifier)) {
-                        targetObject.add(tempClass);
-                    }
+                    targetObject.add(tempClass);
                 } catch (ClassNotFoundException e) {
                     LOGGER.error("This will not happened: {}", e.getMessage(), e);
                     continue;

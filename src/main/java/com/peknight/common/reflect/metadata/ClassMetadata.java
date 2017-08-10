@@ -80,15 +80,11 @@ public class ClassMetadata<T> {
             return implementClassMetadataSet;
         } else {
             Set<Class> implementClassSet =  ClassUtils.listImplementClass(tClass, basePackages);
-            if (implementClassSet == null) {
-                return null;
-            } else {
-                implementClassMetadataSet = new HashSet<>();
-                for (Class implementClass : implementClassSet) {
-                    implementClassMetadataSet.add(MetadataContext.getClassMetadata(implementClass));
-                }
-                return implementClassMetadataSet;
+            implementClassMetadataSet = new HashSet<>();
+            for (Class implementClass : implementClassSet) {
+                implementClassMetadataSet.add(MetadataContext.getClassMetadata(implementClass));
             }
+            return implementClassMetadataSet;
         }
     }
 

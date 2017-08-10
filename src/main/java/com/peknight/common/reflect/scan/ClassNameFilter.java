@@ -31,5 +31,5 @@ package com.peknight.common.reflect.scan;
  * Created by PeKnight on 2017/8/8.
  */
 public interface ClassNameFilter {
-    boolean filter(String className);
+    boolean classNameFilter(String className);
 }

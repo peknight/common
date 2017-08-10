@@ -21,45 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.scan;
-
-import java.util.HashSet;
-import java.util.Set;
+package com.peknight.common.springframework.context;
 
 /**
- * 常规类名过滤，过滤内容见PACKAGE_IGNORE
+ *
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/8.
+ * Created by PeKnight on 2017/8/10.
  */
-public class CommonClassNameFilter implements ClassNameFilter {
-
-    private static final Set<String> PACKAGE_IGNORE = new HashSet<>();
-
-    static {
-        PACKAGE_IGNORE.add("ch.qos");
-        PACKAGE_IGNORE.add("com.intellij");
-        PACKAGE_IGNORE.add("com.oracle");
-        PACKAGE_IGNORE.add("com.sun");
-        PACKAGE_IGNORE.add("javafx");
-        PACKAGE_IGNORE.add("jdk");
-        PACKAGE_IGNORE.add("oracle");
-        PACKAGE_IGNORE.add("org.aspectj.weaver");
-        PACKAGE_IGNORE.add("org.springframework");
-        PACKAGE_IGNORE.add("sun");
-    }
-
-    @Override
-    public boolean classNameFilter(String className) {
-        if (className.matches(".*\\$\\d+$")) {
-            return false;
-        }
-        for (String ignore : PACKAGE_IGNORE) {
-            if (className.startsWith(ignore)) {
-                return false;
-            }
-        }
-        return true;
-    }
+public interface SpringBeanFilter {
+    boolean beanNameFilter(String beanName);
 }

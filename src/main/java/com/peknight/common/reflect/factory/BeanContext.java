@@ -23,8 +23,12 @@
  */
 package com.peknight.common.reflect.factory;
 
+import com.peknight.common.springframework.context.ApplicationContextHolder;
+import com.peknight.common.springframework.context.CommonSpringBeanFilter;
+import com.peknight.common.springframework.context.SpringBeanFilter;
 import com.peknight.common.string.StringUtils;
 import com.peknight.common.validation.Assert;
+import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,5 +95,19 @@ public final class BeanContext {
         List<String> keyList = new ArrayList<>(keySet.size());
         keyList.addAll(keySet);
         return keyList;
+    }
+
+    public static void addSpringBeans() {
+        ApplicationContext context = ApplicationContextHolder.getApplicationContext();
+        if (context == null) {
+            return;
+        }
+        String[] beanNames = context.getBeanDefinitionNames();
+        SpringBeanFilter springBeanFilter = new CommonSpringBeanFilter();
+        for (String beanName : beanNames) {
+            if (springBeanFilter.beanNameFilter(beanName)) {
+                BEAN_CONTEXT.put(beanName, context.getBean(beanName));
+            }
+        }
     }
 }

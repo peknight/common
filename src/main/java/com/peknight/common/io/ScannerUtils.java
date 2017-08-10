@@ -21,45 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.scan;
+package com.peknight.common.io;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Scanner;
 
 /**
- * 常规类名过滤，过滤内容见PACKAGE_IGNORE
+ * Scanner工具类
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/8.
+ * Created by PeKnight on 2017/8/10.
  */
-public class CommonClassNameFilter implements ClassNameFilter {
+public final class ScannerUtils {
 
-    private static final Set<String> PACKAGE_IGNORE = new HashSet<>();
+    private ScannerUtils() {}
 
-    static {
-        PACKAGE_IGNORE.add("ch.qos");
-        PACKAGE_IGNORE.add("com.intellij");
-        PACKAGE_IGNORE.add("com.oracle");
-        PACKAGE_IGNORE.add("com.sun");
-        PACKAGE_IGNORE.add("javafx");
-        PACKAGE_IGNORE.add("jdk");
-        PACKAGE_IGNORE.add("oracle");
-        PACKAGE_IGNORE.add("org.aspectj.weaver");
-        PACKAGE_IGNORE.add("org.springframework");
-        PACKAGE_IGNORE.add("sun");
-    }
-
-    @Override
-    public boolean classNameFilter(String className) {
-        if (className.matches(".*\\$\\d+$")) {
-            return false;
-        }
-        for (String ignore : PACKAGE_IGNORE) {
-            if (className.startsWith(ignore)) {
-                return false;
-            }
-        }
-        return true;
+    public static String next(Scanner scanner, InputDispatcher dispatcher) {
+        String next;
+        while ((next = dispatcher.dispatch(scanner.next())) == null) {}
+        return next;
     }
 }

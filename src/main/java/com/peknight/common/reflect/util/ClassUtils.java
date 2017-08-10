@@ -26,12 +26,15 @@ package com.peknight.common.reflect.util;
 import com.peknight.common.reflect.scan.ClassNameFilter;
 import com.peknight.common.reflect.scan.CommonClassNameFilter;
 import com.peknight.common.reflect.scan.ImplementClassResolver;
+import com.peknight.common.reflect.scan.ListClassResolver;
+import com.peknight.common.reflect.scan.PackageResolver;
 import com.peknight.common.reflect.scan.PackageScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.springframework.util.ClassUtils.isPrimitiveOrWrapper;
@@ -85,17 +88,22 @@ public final class ClassUtils {
     public static Set<Class> listImplementClass(Class tClass, String... basePackages) throws IOException {
         int modifiers = tClass.getModifiers();
         if (Modifier.isFinal(modifiers)) {
-            return null;
+            return new HashSet<>();
         }
-        ImplementClassResolver resolver = new ImplementClassResolver(tClass);
+        PackageResolver<Set<Class>> resolver = new ImplementClassResolver(tClass);
         ClassNameFilter classNameFilter = new CommonClassNameFilter();
         PackageScanner<Set<Class>> scanner = new PackageScanner<>(resolver, classNameFilter);
         scanner.resolveBasePackages(basePackages);
         Set<Class> implementClassSet = resolver.getTargetObject();
-        if (implementClassSet.size() == 0) {
-            return null;
-        } else {
-            return implementClassSet;
-        }
+        return implementClassSet;
+    }
+
+    public static Set<Class> listClass(String... basePackages) throws IOException {
+        PackageResolver<Set<Class>> resolver = new ListClassResolver();
+        ClassNameFilter classNameFilter = new CommonClassNameFilter();
+        PackageScanner<Set<Class>> scanner = new PackageScanner<>(resolver, classNameFilter);
+        scanner.resolveBasePackages(basePackages);
+        Set<Class> classSet = resolver.getTargetObject();
+        return classSet;
     }
 }

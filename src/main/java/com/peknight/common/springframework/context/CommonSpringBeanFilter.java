@@ -21,42 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.scan;
+package com.peknight.common.springframework.context;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * 常规类名过滤，过滤内容见PACKAGE_IGNORE
+ *
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/8.
+ * Created by PeKnight on 2017/8/10.
  */
-public class CommonClassNameFilter implements ClassNameFilter {
-
-    private static final Set<String> PACKAGE_IGNORE = new HashSet<>();
+public class CommonSpringBeanFilter implements SpringBeanFilter {
+    public static final Set<String> IGNORE_BEAN_NAMES = new HashSet<>();
 
     static {
-        PACKAGE_IGNORE.add("ch.qos");
-        PACKAGE_IGNORE.add("com.intellij");
-        PACKAGE_IGNORE.add("com.oracle");
-        PACKAGE_IGNORE.add("com.sun");
-        PACKAGE_IGNORE.add("javafx");
-        PACKAGE_IGNORE.add("jdk");
-        PACKAGE_IGNORE.add("oracle");
-        PACKAGE_IGNORE.add("org.aspectj.weaver");
-        PACKAGE_IGNORE.add("org.springframework");
-        PACKAGE_IGNORE.add("sun");
+        IGNORE_BEAN_NAMES.add("objectNamingStrategy");
+        IGNORE_BEAN_NAMES.add("propertySourcesPlaceholderConfigurer");
+        IGNORE_BEAN_NAMES.add("mbean");
     }
 
     @Override
-    public boolean classNameFilter(String className) {
-        if (className.matches(".*\\$\\d+$")) {
+    public boolean beanNameFilter(String beanName) {
+        if (beanName.indexOf(".") != -1) {
             return false;
         }
-        for (String ignore : PACKAGE_IGNORE) {
-            if (className.startsWith(ignore)) {
+        for (String ignoreBeanName : IGNORE_BEAN_NAMES) {
+            if (beanName.startsWith(ignoreBeanName)) {
                 return false;
             }
         }

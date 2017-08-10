@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.factory;
+package com.peknight.common.reflect.material;
 
 import com.peknight.common.reflect.util.MethodUtils;
 import com.peknight.common.validation.Assert;

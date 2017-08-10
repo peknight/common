@@ -23,8 +23,8 @@
  */
 package com.peknight.common.reflect.util;
 
-import com.peknight.common.reflect.factory.BeanCreationException;
-import com.peknight.common.reflect.factory.BeanMaterial;
+import com.peknight.common.reflect.material.BeanCreationException;
+import com.peknight.common.reflect.material.BeanMaterial;
 import com.peknight.common.reflect.metadata.MetadataContext;
 import com.peknight.common.reflect.metadata.MethodMetadata;
 
@@ -50,6 +50,15 @@ public final class MethodUtils {
         for (Method method : Object.class.getDeclaredMethods()) {
             OBJECT_METHODS.add(MetadataContext.getMethodMetadata(method));
         }
+    }
+
+    public static Class[] getParameterTypesByClassNames(List<String> paramList) throws ClassNotFoundException {
+        int length = paramList == null ? 0 : paramList.size();
+        Class[] parameterTypes = new Class[length];
+        for (int i = 0; i < length; i++) {
+            parameterTypes[i] = ClassUtils.forName(paramList.get(i));
+        }
+        return parameterTypes;
     }
 
     public static Class[] getParameterTypes(List<BeanMaterial> paramList) {

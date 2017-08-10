@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.factory;
+package com.peknight.common.reflect.material;
 
 import com.peknight.common.string.JsonUtils;
 import com.peknight.common.string.StringUtils;
@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Bean创建材料
@@ -54,25 +55,30 @@ public class BeanMaterial<T, E extends T> {
 
     protected ConstructorMaterial<E> beanConstructor;
 
-    public BeanMaterial(Class<T> declaredClass, Class<E> actualClass, String beanName, String beanValue, ConstructorMaterial<E> beanConstructor) {
+    protected MethodMaterial beanMethod;
+
+    public BeanMaterial(Class<T> declaredClass, Class<E> actualClass, String beanName, String beanValue, ConstructorMaterial<E> beanConstructor, MethodMaterial beanMethod) {
         Assert.notAllNull("Class Can Not Be Null", declaredClass, actualClass);
-        Assert.notAllNull("Value Or Constructor Can Not Be Null", beanValue, beanConstructor);
+        Assert.notAllNull("Value/Constructor/Method Can Not Be Null", beanValue, beanConstructor, beanMethod);
         this.declaredClass = declaredClass;
         this.actualClass = actualClass;
         this.beanName = beanName;
         this.beanValue = beanValue;
         this.beanConstructor = beanConstructor;
+        this.beanMethod = beanMethod;
         if (declaredClass == null) {
             this.declaredClass = (Class<T>) actualClass;
         }
         if (actualClass == null) {
             this.actualClass = (Class<E>) declaredClass;
         }
+        bean = (E) BeanContext.get(beanName);
     }
 
     public E getBean() throws BeanCreationException {
         parseBeanValue();
         invokeConstructor();
+        invokeMethod();
         customParser();
         if (bean == null) {
             throw new BeanCreationException();
@@ -85,14 +91,10 @@ public class BeanMaterial<T, E extends T> {
 
     public E parseBeanValue() {
         if (bean == null && beanValue != null) {
-            if (beanValue.matches(BeanContext.RAW_REG)) {
-                bean = (E) BeanContext.getByRawName(beanValue);
-            } else {
-                try {
-                    bean = JsonUtils.read(beanValue, actualClass);
-                } catch (IOException e) {
-                    LOGGER.error("Parse Bean Value Error! {}", e.getMessage(), e);
-                }
+            try {
+                bean = JsonUtils.read(beanValue, actualClass);
+            } catch (IOException e) {
+                LOGGER.error("Parse Bean Value Error! {}", e.getMessage(), e);
             }
         }
         return bean;
@@ -101,6 +103,19 @@ public class BeanMaterial<T, E extends T> {
     public E invokeConstructor() throws BeanCreationException {
         if (bean == null && beanConstructor != null) {
             bean = beanConstructor.getBean();
+        }
+        return bean;
+    }
+
+    public E invokeMethod() throws BeanCreationException {
+        if (bean == null && beanMethod != null) {
+            try {
+                bean = (E) beanMethod.invokeMethod();
+            } catch (InvocationTargetException e) {
+                throw new BeanCreationException(e);
+            } catch (IllegalAccessException e) {
+                throw new BeanCreationException(e);
+            }
         }
         return bean;
     }

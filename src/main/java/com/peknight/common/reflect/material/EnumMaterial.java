@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.factory;
+package com.peknight.common.reflect.material;
 
 /**
  * 枚举创建材料
@@ -31,20 +31,15 @@ package com.peknight.common.reflect.factory;
  * Created by PeKnight on 2017/8/9.
  */
 public class EnumMaterial<T extends Enum<T>> extends BeanMaterial<T, T> {
-    public EnumMaterial(Class<T> enumClass, String beanName, String beanValue) {
-        super(enumClass, enumClass, beanName, beanValue, null);
+    public EnumMaterial(Class<T> enumClass, String beanName, String beanValue, MethodMaterial beanMethod) {
+        super(enumClass, enumClass, beanName, beanValue, null, beanMethod);
     }
 
     @Override
     public T parseBeanValue() {
-        if (beanValue == null) {
-            return null;
+        if (bean == null && beanValue != null) {
+            bean = Enum.valueOf(actualClass, beanValue);
         }
-        if (beanValue.matches(BeanContext.RAW_REG)) {
-            bean = (T) BeanContext.getByRawName(beanValue);
-            return bean;
-        }
-        bean = Enum.valueOf(actualClass, beanValue);
         return bean;
     }
 }

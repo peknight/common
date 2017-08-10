@@ -23,6 +23,7 @@
  */
 package com.peknight.common.reflect.metadata;
 
+import com.peknight.common.collection.ArrayUtils;
 import com.peknight.common.reflect.util.ClassUtils;
 
 import java.io.IOException;
@@ -114,9 +115,7 @@ public class ClassMetadata<T> {
         } else if (tClass.isEnum()) {
             T[] enumValueArray = tClass.getEnumConstants();
             enumValues = new ArrayList<>(enumValueArray.length);
-            for (T enumValue : enumValueArray) {
-                enumValues.add(enumValue);
-            }
+            ArrayUtils.arrayToCollection(enumValueArray, enumValues);
             return enumValues;
         } else {
             return null;
@@ -145,10 +144,10 @@ public class ClassMetadata<T> {
     public String toString() {
         return "ClassMetadata{" +
                 "tClass=" + tClass +
-                ", componentClassMetadataList=" + componentClassMetadataList +
-                ", implementClassMetadataSet=" + implementClassMetadataSet +
-                ", constructorMetadataSet=" + constructorMetadataSet +
-                ", enumValues=" + enumValues +
+                "], componentClassMetadataList[" + (componentClassMetadataList == null ? 0 : componentClassMetadataList.size()) +
+                "], implementClassMetadataSet[" + (implementClassMetadataSet == null ? 0 : implementClassMetadataSet.size()) +
+                "], constructorMetadataSet[" + (constructorMetadataSet == null ? 0 : constructorMetadataSet.size()) +
+                "], enumValues=" + enumValues +
                 '}';
     }
 }

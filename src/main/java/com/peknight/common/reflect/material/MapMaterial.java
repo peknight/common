@@ -21,33 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.factory;
+package com.peknight.common.reflect.material;
+
+import java.util.List;
+import java.util.Map;
 
 /**
- * Bean创建异常
+ * Map创建材料
  *
  * @author PeKnight
  *
  * Created by PeKnight on 2017/8/9.
  */
-public class BeanCreationException extends Exception {
-    public BeanCreationException() {
-        super("Please Check Your Args");
+public class MapMaterial<T extends Map, E extends T> extends BeanMaterial<T, E> {
+
+    private List<List<BeanMaterial>> components;
+
+    public MapMaterial(Class<T> declaredClass, Class<E> actualClass, String beanName, String beanValue, ConstructorMaterial<E> beanConstructor, MethodMaterial beanMethod, List<List<BeanMaterial>> components) {
+        super(declaredClass, actualClass, beanName, beanValue, beanConstructor, beanMethod);
+        this.components = components;
     }
 
-    public BeanCreationException(String message) {
-        super(message);
-    }
-
-    public BeanCreationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public BeanCreationException(Throwable cause) {
-        super(cause);
-    }
-
-    public BeanCreationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    @Override
+    public E customParser() throws BeanCreationException {
+        if (bean != null && components != null) {
+            for (List<BeanMaterial> component : components) {
+                if (component.size() != 2) {
+                    throw new BeanCreationException();
+                } else {
+                    bean.put(component.get(0).getBean(), component.get(1).getBean());
+                }
+            }
+        }
+        return bean;
     }
 }

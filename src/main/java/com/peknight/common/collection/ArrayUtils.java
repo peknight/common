@@ -23,7 +23,9 @@
  */
 package com.peknight.common.collection;
 
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 
 /**
  * 数组工具类
@@ -175,6 +177,29 @@ public final class ArrayUtils {
             array[i] = array[i-1];
         }
         array[start] = temp;
+    }
+
+    public static <T> T[] collectionToArray(Collection<T> origin, T[] target) {
+        if (origin == null) {
+            return null;
+        }
+        int length = target.length;
+        if (origin.size() != length) {
+            throw new IllegalArgumentException("Check Array's Length");
+        }
+        Iterator<T> iterator = origin.iterator();
+        int index = 0;
+        while (iterator.hasNext()) {
+            target[index++] = iterator.next();
+        }
+        return target;
+    }
+
+    public static <E, T extends Collection<E>> T arrayToCollection(E[] origin, T target) {
+        for (E e : origin) {
+            target.add(e);
+        }
+        return target;
     }
 
     /***************************************************************************

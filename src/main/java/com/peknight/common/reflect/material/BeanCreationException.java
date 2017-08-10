@@ -21,34 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.factory;
-
-import java.util.Collection;
-import java.util.List;
+package com.peknight.common.reflect.material;
 
 /**
- * 集合创建材料
+ * Bean创建异常
  *
  * @author PeKnight
  *
  * Created by PeKnight on 2017/8/9.
  */
-public class CollectionMaterial<T extends Collection, E extends T> extends BeanMaterial<T, E> {
-
-    private List<BeanMaterial> components;
-
-    public CollectionMaterial(Class<T> declaredClass, Class<E> actualClass, String beanName, String beanValue, ConstructorMaterial<E> beanConstructor, List<BeanMaterial> components) {
-        super(declaredClass, actualClass, beanName, beanValue, beanConstructor);
-        this.components = components;
+public class BeanCreationException extends Exception {
+    public BeanCreationException() {
+        super("Please Check Your Args");
     }
 
-    @Override
-    public E customParser() throws BeanCreationException {
-        if (bean != null && components != null) {
-            for (BeanMaterial component : components) {
-                bean.add(component.getBean());
-            }
-        }
-        return bean;
+    public BeanCreationException(String message) {
+        super(message);
+    }
+
+    public BeanCreationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public BeanCreationException(Throwable cause) {
+        super(cause);
+    }
+
+    public BeanCreationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

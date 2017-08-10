@@ -21,12 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.factory;
+package com.peknight.common.reflect.material;
 
 import com.peknight.common.springframework.context.ApplicationContextHolder;
 import com.peknight.common.springframework.context.CommonSpringBeanFilter;
 import com.peknight.common.springframework.context.SpringBeanFilter;
-import com.peknight.common.string.StringUtils;
 import com.peknight.common.validation.Assert;
 import org.springframework.context.ApplicationContext;
 
@@ -47,18 +46,9 @@ public final class BeanContext {
 
     private BeanContext() {}
 
-    public static final String RAW_REG = "^#\\{([a-zA-Z\\$_][\\w\\$]*)(\\.[a-zA-Z\\$_][\\w\\$]*)*\\}$";
-
     public static final String BEAN_NAME_REG = "^([a-zA-Z\\$_][\\w\\$]*)(\\.[a-zA-Z\\$_][\\w\\$]*)*$";
 
     private static final Map<String, Object> BEAN_CONTEXT = new HashMap<>();
-
-    public static String parseRawName(String rawName) {
-        if (!rawName.matches(RAW_REG)) {
-            throw new IllegalArgumentException(rawName);
-        }
-        return StringUtils.substring(rawName, 2, -1);
-    }
 
     public static void put(String name, Object bean) {
         Assert.notNull("Name And Bean Can Not Be Null", name, bean);
@@ -70,10 +60,6 @@ public final class BeanContext {
 
     public static Object get(String name) {
         return BEAN_CONTEXT.get(name);
-    }
-
-    public static Object getByRawName(String rawName) {
-        return BEAN_CONTEXT.get(parseRawName(rawName));
     }
 
     public static <T, E extends T> List<E> get(Class<T> tClass) {

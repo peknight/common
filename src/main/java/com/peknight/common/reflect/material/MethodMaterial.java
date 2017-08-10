@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.factory;
+package com.peknight.common.reflect.material;
 
 import com.peknight.common.reflect.util.MethodUtils;
 import com.peknight.common.string.StringUtils;
@@ -39,7 +39,7 @@ import java.util.List;
  * Created by PeKnight on 2017/8/9.
  */
 public class MethodMaterial<T> {
-    private T invoker;
+    private BeanMaterial<T, T> invoker;
 
     private Object returnValue;
 
@@ -49,7 +49,7 @@ public class MethodMaterial<T> {
 
     private List<BeanMaterial> paramList;
 
-    public MethodMaterial(Class<T> tClass, T invoker, String methodName, List<BeanMaterial> paramList, String returnBeanName) throws NoSuchMethodException {
+    public MethodMaterial(Class<T> tClass, BeanMaterial<T, T> invoker, String methodName, List<BeanMaterial> paramList, String returnBeanName) throws NoSuchMethodException {
         Assert.notNull("Param Can Not Be Null", tClass, methodName, paramList);
         this.invoker = invoker;
         this.paramList = paramList;
@@ -62,7 +62,7 @@ public class MethodMaterial<T> {
         if (!method.isAccessible()) {
             method.setAccessible(true);
         }
-        returnValue = method.invoke(invoker, MethodUtils.getArgs(paramList));
+        returnValue = method.invoke(invoker.getBean(), MethodUtils.getArgs(paramList));
         if (!StringUtils.isEmpty(returnBeanName)) {
             BeanContext.put(returnBeanName, returnValue);
         }

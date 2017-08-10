@@ -45,8 +45,10 @@ public class MethodMetadata {
 
     MethodMetadata(Method method) {
         this.method = method;
-        getParamList();
-        getReturnClassMetadata();
+    }
+
+    public Method getDeclaredMethod() {
+        return this.method;
     }
 
     public List<ClassMetadata> getParamList() {

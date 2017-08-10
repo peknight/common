@@ -23,13 +23,36 @@
  */
 package com.peknight.common.reflect.factory;
 
+import java.util.List;
+import java.util.Map;
+
 /**
- * 对象容器
+ * Map创建材料
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/8.
+ * Created by PeKnight on 2017/8/9.
  */
-public class ObjectContext {
+public class MapMaterial<T extends Map, E extends T> extends BeanMaterial<T, E> {
 
+    private List<List<BeanMaterial>> components;
+
+    public MapMaterial(Class<T> declaredClass, Class<E> actualClass, String beanName, String beanValue, ConstructorMaterial<E> beanConstructor, List<List<BeanMaterial>> components) {
+        super(declaredClass, actualClass, beanName, beanValue, beanConstructor);
+        this.components = components;
+    }
+
+    @Override
+    public E customParser() throws BeanCreationException {
+        if (bean != null && components != null) {
+            for (List<BeanMaterial> component : components) {
+                if (component.size() != 2) {
+                    throw new BeanCreationException();
+                } else {
+                    bean.put(component.get(0).getBean(), component.get(1).getBean());
+                }
+            }
+        }
+        return bean;
+    }
 }

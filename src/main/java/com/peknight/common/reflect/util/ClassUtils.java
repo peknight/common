@@ -27,10 +27,11 @@ import com.peknight.common.reflect.scan.ClassNameFilter;
 import com.peknight.common.reflect.scan.CommonClassNameFilter;
 import com.peknight.common.reflect.scan.ImplementClassResolver;
 import com.peknight.common.reflect.scan.PackageScanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.Set;
 
 import static org.springframework.util.ClassUtils.isPrimitiveOrWrapper;
@@ -43,6 +44,19 @@ import static org.springframework.util.ClassUtils.isPrimitiveOrWrapper;
  * Created by PeKnight on 2017/8/4.
  */
 public final class ClassUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassUtils.class);
+
+    private ClassUtils() {}
+
+    public static Class<?> forName(String className) throws ClassNotFoundException {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            LOGGER.error("Class Not Found: {}", className, e);
+            throw e;
+        }
+    }
 
     /**
      * 获取数组类型的最底层元素类型
@@ -59,8 +73,7 @@ public final class ClassUtils {
      */
     public static boolean isPlainValue(Class<?> clazz) {
         clazz = getFinalComponentClass(clazz);
-        if (isPrimitiveOrWrapper(clazz) || clazz.isEnum() || String.class.equals(clazz)
-                || Collection.class.isAssignableFrom(clazz)) {
+        if (isPrimitiveOrWrapper(clazz) || clazz.isEnum() || String.class.equals(clazz)) {
             return true;
         }
         return false;

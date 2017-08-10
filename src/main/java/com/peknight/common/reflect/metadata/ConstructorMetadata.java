@@ -42,7 +42,10 @@ public class ConstructorMetadata<T> {
 
     ConstructorMetadata(Constructor<T> constructor) {
         this.constructor = constructor;
-        getParamList();
+    }
+
+    public Constructor<T> getConstructor() {
+        return this.constructor;
     }
 
     public List<ClassMetadata> getParamList() {

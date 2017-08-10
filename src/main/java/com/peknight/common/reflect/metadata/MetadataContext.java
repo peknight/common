@@ -42,18 +42,20 @@ import java.util.Map;
  *
  * Created by PeKnight on 2017/8/8.
  */
-public class MetadataContext {
+public final class MetadataContext {
+
+    private MetadataContext() {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataContext.class);
 
-    private static final Map<String, ClassMetadata> CLASS_METADATA_MAP = new HashMap<>();
-    private static final Map<Constructor, ConstructorMetadata> CONSTRUCTOR_METADATA_MAP = new HashMap<>();
-    private static final Map<Method, MethodMetadata> METHOD_METADATA_MAP = new HashMap<>();
+    private static final Map<String, ClassMetadata> CLASS_METADATA_CONTEXT = new HashMap<>();
+    private static final Map<Constructor, ConstructorMetadata> CONSTRUCTOR_METADATA_CONTEXT = new HashMap<>();
+    private static final Map<Method, MethodMetadata> METHOD_METADATA_CONTEXT = new HashMap<>();
 
     public static ClassMetadata getClassMetadata(Type type) {
         String typeName = type.getTypeName();
-        if (CLASS_METADATA_MAP.containsKey(typeName)) {
-            return CLASS_METADATA_MAP.get(typeName);
+        if (CLASS_METADATA_CONTEXT.containsKey(typeName)) {
+            return CLASS_METADATA_CONTEXT.get(typeName);
         } else {
             ClassMetadata classMetadata = null;
             if (ParameterizedType.class.isAssignableFrom(type.getClass())) {
@@ -70,27 +72,33 @@ public class MetadataContext {
                 LOGGER.error("What Is This Type?! {}", type.getClass().getName());
                 return null;
             }
-            CLASS_METADATA_MAP.put(typeName, classMetadata);
+            CLASS_METADATA_CONTEXT.put(typeName, classMetadata);
+            classMetadata.getComponentClassMetadataList();
+            classMetadata.getConstructorMetadataSet();
+            classMetadata.getEnumValues();
             return classMetadata;
         }
     }
 
     public static ConstructorMetadata getConstructorMetadata(Constructor constructor) {
-        if (CONSTRUCTOR_METADATA_MAP.containsKey(constructor)) {
-            return CONSTRUCTOR_METADATA_MAP.get(constructor);
+        if (CONSTRUCTOR_METADATA_CONTEXT.containsKey(constructor)) {
+            return CONSTRUCTOR_METADATA_CONTEXT.get(constructor);
         } else {
             ConstructorMetadata constructorMetadata = new ConstructorMetadata(constructor);
-            CONSTRUCTOR_METADATA_MAP.put(constructor, constructorMetadata);
+            CONSTRUCTOR_METADATA_CONTEXT.put(constructor, constructorMetadata);
+            constructorMetadata.getParamList();
             return constructorMetadata;
         }
     }
 
     public static MethodMetadata getMethodMetadata(Method method) {
-        if (METHOD_METADATA_MAP.containsKey(method)) {
-            return METHOD_METADATA_MAP.get(method);
+        if (METHOD_METADATA_CONTEXT.containsKey(method)) {
+            return METHOD_METADATA_CONTEXT.get(method);
         } else {
             MethodMetadata methodMetadata = new MethodMetadata(method);
-            METHOD_METADATA_MAP.put(method, methodMetadata);
+            METHOD_METADATA_CONTEXT.put(method, methodMetadata);
+            methodMetadata.getParamList();
+            methodMetadata.getReturnClassMetadata();
             return methodMetadata;
         }
     }

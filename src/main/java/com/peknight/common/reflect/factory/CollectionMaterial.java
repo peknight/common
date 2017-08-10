@@ -21,45 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.reflect.scan;
+package com.peknight.common.reflect.factory;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
 
 /**
- * 常规类名过滤，过滤内容见STARTSWITH_IGNORE
+ * 集合创建材料
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/8/8.
+ * Created by PeKnight on 2017/8/9.
  */
-public class CommonClassNameFilter implements ClassNameFilter {
+public class CollectionMaterial<T extends Collection, E extends T> extends BeanMaterial<T, E> {
 
-    private static final Set<String> PACKAGE_IGNORE = new HashSet<>();
+    private List<BeanMaterial> components;
 
-    static {
-        PACKAGE_IGNORE.add("ch.qos");
-        PACKAGE_IGNORE.add("com.intellij");
-        PACKAGE_IGNORE.add("com.oracle");
-        PACKAGE_IGNORE.add("com.sun");
-        PACKAGE_IGNORE.add("javafx");
-        PACKAGE_IGNORE.add("jdk");
-        PACKAGE_IGNORE.add("oracle");
-        PACKAGE_IGNORE.add("org.aspectj.weaver");
-        PACKAGE_IGNORE.add("org.springframework");
-        PACKAGE_IGNORE.add("sun");
+    public CollectionMaterial(Class<T> declaredClass, Class<E> actualClass, String beanName, String beanValue, ConstructorMaterial<E> beanConstructor, List<BeanMaterial> components) {
+        super(declaredClass, actualClass, beanName, beanValue, beanConstructor);
+        this.components = components;
     }
 
     @Override
-    public boolean filter(String className) {
-        if (className.matches(".*\\$\\d+$")) {
-            return false;
-        }
-        for (String ignore : PACKAGE_IGNORE) {
-            if (className.startsWith(ignore)) {
-                return false;
+    public E customParser() throws BeanCreationException {
+        if (bean != null && components != null) {
+            for (BeanMaterial component : components) {
+                bean.add(component.getBean());
             }
         }
-        return true;
+        return bean;
     }
 }

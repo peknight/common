@@ -57,13 +57,10 @@ public class ClassMetadata<T> {
     ClassMetadata(Class<T> tClass, List<ClassMetadata> componentClassMetadataList) {
         this.tClass = tClass;
         this.componentClassMetadataList = componentClassMetadataList;
-        getComponentClassMetadataList();
-        getConstructorMetadataSet();
-        getEnumValues();
     }
 
-    public String getClassName() {
-        return tClass.getName();
+    public Class<T> getDeclaredClass() {
+        return this.tClass;
     }
 
     public List<ClassMetadata> getComponentClassMetadataList() {

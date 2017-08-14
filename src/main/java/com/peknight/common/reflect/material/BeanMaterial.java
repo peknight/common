@@ -59,7 +59,7 @@ public class BeanMaterial<T, E extends T> {
 
     public BeanMaterial(Class<T> declaredClass, Class<E> actualClass, String beanName, String beanValue, ConstructorMaterial<E> beanConstructor, MethodMaterial beanMethod) {
         Assert.notAllNull("Class Can Not Be Null", declaredClass, actualClass);
-        Assert.notAllNull("Value/Constructor/Method Can Not Be Null", beanValue, beanConstructor, beanMethod);
+        Assert.notAllNull("Value/Constructor/Method Can Not Be Null", beanName, beanValue, beanConstructor, beanMethod);
         this.declaredClass = declaredClass;
         this.actualClass = actualClass;
         this.beanName = beanName;
@@ -92,7 +92,11 @@ public class BeanMaterial<T, E extends T> {
     public E parseBeanValue() {
         if (bean == null && beanValue != null) {
             try {
-                bean = JsonUtils.read(beanValue, actualClass);
+                if (String.class.equals(actualClass)) {
+                    bean = (E) beanValue;
+                } else {
+                    bean = JsonUtils.read(beanValue, actualClass);
+                }
             } catch (IOException e) {
                 LOGGER.error("Parse Bean Value Error! {}", e.getMessage(), e);
             }

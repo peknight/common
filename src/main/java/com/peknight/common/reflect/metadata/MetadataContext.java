@@ -23,13 +23,19 @@
  */
 package com.peknight.common.reflect.metadata;
 
+import com.peknight.common.string.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.TypeVariableImpl;
+import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +65,7 @@ public final class MetadataContext {
         } else {
             ClassMetadata classMetadata = null;
             if (ParameterizedType.class.isAssignableFrom(type.getClass())) {
-                ParameterizedType parameterizedType = ((ParameterizedType) type);
+                ParameterizedType parameterizedType = (ParameterizedType) type;
                 Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
                 List<ClassMetadata> componentClassMetadataList = new ArrayList<>(actualTypeArguments.length);
                 for (Type actualTypeArgument : actualTypeArguments) {
@@ -68,9 +74,21 @@ public final class MetadataContext {
                 classMetadata = new ClassMetadata((Class) parameterizedType.getRawType(), componentClassMetadataList);
             } else if (Class.class.isAssignableFrom(type.getClass())) {
                 classMetadata = new ClassMetadata((Class) type);
+            } else if (GenericArrayType.class.isAssignableFrom(type.getClass())) {
+                GenericArrayType genericArrayType = (GenericArrayType) type;
+                LOGGER.warn("GenericArrayType Detected! {}<{}>", type.getTypeName(), genericArrayType.getGenericComponentType());
+                return getClassMetadata(Object[].class);
+            } else if (TypeVariable.class.isAssignableFrom(type.getClass())) {
+                TypeVariable typeVariable = (TypeVariable) type;
+                LOGGER.warn("TypeVariable Detected! {}<Bounds: {}, AnnotatedBounds: {}>", type.getTypeName(), StringUtils.toString(typeVariable.getBounds()), StringUtils.toString(typeVariable.getAnnotatedBounds()));
+                return getClassMetadata(Object.class);
+            } else if (WildcardType.class.isAssignableFrom(type.getClass())) {
+                WildcardType wildcardType = (WildcardType) type;
+                LOGGER.warn("WildcardType Detected! {}<LowerBounds: {}, UpperBounds: {}>", type.getTypeName(), wildcardType.getLowerBounds(), wildcardType.getUpperBounds());
+                return getClassMetadata(Object.class);
             } else {
                 LOGGER.error("What Is This Type?! {}", type.getClass().getName());
-                return null;
+                return getClassMetadata(Object.class);
             }
             CLASS_METADATA_CONTEXT.put(typeName, classMetadata);
             classMetadata.getComponentClassMetadataList();

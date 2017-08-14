@@ -23,6 +23,8 @@
  */
 package com.peknight.common.io;
 
+import org.slf4j.Logger;
+
 import java.util.Scanner;
 
 /**
@@ -40,5 +42,13 @@ public final class ScannerUtils {
         String next;
         while ((next = dispatcher.dispatch(scanner.next())) == null) {}
         return next;
+    }
+
+    public static String formatNext(String regExp, Scanner scanner, Logger logger) {
+        String input;
+        while (!(input = scanner.next()).matches(regExp)) {
+            logger.warn("Illegal Format");
+        }
+        return input;
     }
 }

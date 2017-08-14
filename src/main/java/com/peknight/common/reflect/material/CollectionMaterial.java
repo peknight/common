@@ -23,6 +23,7 @@
  */
 package com.peknight.common.reflect.material;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,9 +45,22 @@ public class CollectionMaterial<T extends Collection, E extends T> extends BeanM
 
     @Override
     public E customParser() throws BeanCreationException {
-        if (bean != null && components != null) {
-            for (BeanMaterial component : components) {
-                bean.add(component.getBean());
+        if (components != null) {
+            int length = components.size();
+            if (bean == null && actualClass.isArray()) {
+                bean = (E) Array.newInstance(actualClass, length);
+            }
+            if (bean != null) {
+                if (actualClass.isArray()) {
+                    for (int i = 0; i < length; i++) {
+                        Array.set(bean, i, components.get(i).getBean());
+                    }
+                } else {
+                    for (BeanMaterial component : components) {
+                        bean.add(component.getBean());
+                    }
+
+                }
             }
         }
         return bean;

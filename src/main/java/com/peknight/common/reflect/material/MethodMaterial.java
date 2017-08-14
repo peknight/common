@@ -62,7 +62,7 @@ public class MethodMaterial<T> {
         if (!method.isAccessible()) {
             method.setAccessible(true);
         }
-        returnValue = method.invoke(invoker.getBean(), MethodUtils.getArgs(paramList));
+        returnValue = method.invoke(invoker == null ? null : invoker.getBean(), MethodUtils.getArgs(paramList));
         if (!StringUtils.isEmpty(returnBeanName)) {
             BeanContext.put(returnBeanName, returnValue);
         }

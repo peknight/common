@@ -60,4 +60,24 @@ public final class LogUtils {
     public static void error(Object... object) {
         LOGGER.error(StringUtils.substring(StringUtils.toString(object), 1, -1));
     }
+
+    public static void trace(Logger logger, Object... object) {
+        logger.trace(StringUtils.substring(StringUtils.toString(object), 1, -1));
+    }
+
+    public static void debug(Logger logger, Object... object) {
+        logger.debug(StringUtils.substring(StringUtils.toString(object), 1, -1));
+    }
+
+    public static void info(Logger logger, Object... object) {
+        logger.info(StringUtils.substring(StringUtils.toString(object), 1, -1));
+    }
+
+    public static void warn(Logger logger, Object... object) {
+        logger.warn(StringUtils.substring(StringUtils.toString(object), 1, -1));
+    }
+
+    public static void error(Logger logger, Object... object) {
+        logger.error(StringUtils.substring(StringUtils.toString(object), 1, -1));
+    }
 }

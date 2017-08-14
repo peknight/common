@@ -25,6 +25,7 @@ package com.peknight.common.reflect.util;
 
 import com.peknight.common.reflect.material.BeanCreationException;
 import com.peknight.common.reflect.material.BeanMaterial;
+import com.peknight.common.reflect.metadata.ConstructorMetadata;
 import com.peknight.common.reflect.metadata.MetadataContext;
 import com.peknight.common.reflect.metadata.MethodMetadata;
 
@@ -89,6 +90,21 @@ public final class MethodUtils {
         return constructor;
     }
 
+    public static <T> Set<ConstructorMetadata<T>> getConstructorSet(Class<T> clazz) {
+        Set<ConstructorMetadata<T>> constructorSet = new HashSet<>();
+        for (Constructor constructor : clazz.getConstructors()) {
+            constructorSet.add(MetadataContext.getConstructorMetadata(constructor));
+        }
+        for (Constructor constructor : clazz.getDeclaredConstructors()) {
+            constructorSet.add(MetadataContext.getConstructorMetadata(constructor));
+        }
+        if (constructorSet.size() == 0) {
+            return null;
+        } else {
+            return constructorSet;
+        }
+    }
+
     public static Method getMethod(Class tClass, String methodName, Class[] parameterTypes) throws NoSuchMethodException {
         Method method;
         try {
@@ -126,6 +142,7 @@ public final class MethodUtils {
             }
         }
         methodSet.removeAll(OBJECT_METHODS);
+
         return methodSet;
     }
 }

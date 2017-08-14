@@ -25,9 +25,9 @@ package com.peknight.common.reflect.metadata;
 
 import com.peknight.common.collection.ArrayUtils;
 import com.peknight.common.reflect.util.ClassUtils;
+import com.peknight.common.reflect.util.MethodUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +79,8 @@ public class ClassMetadata<T> {
     public Set<ClassMetadata> getImplementClassMetadataSet(String... basePackages) throws IOException {
         if (implementClassMetadataSet != null) {
             return implementClassMetadataSet;
+        } else if (basePackages == null) {
+            return null;
         } else {
             Set<Class> implementClassSet =  ClassUtils.listImplementClass(tClass, basePackages);
             implementClassMetadataSet = new HashSet<>();
@@ -95,17 +97,8 @@ public class ClassMetadata<T> {
         } else if (ClassUtils.isPlainValue(tClass) || tClass.isInterface()) {
             return null;
         } else {
-            Constructor<T>[] constructors = (Constructor<T>[]) tClass.getConstructors();
-            int length = constructors.length;
-            if (length == 0) {
-                return null;
-            } else {
-                constructorMetadataSet = new HashSet<>();
-                for (Constructor<T> constructor : constructors) {
-                    constructorMetadataSet.add(MetadataContext.getConstructorMetadata(constructor));
-                }
-                return constructorMetadataSet;
-            }
+            constructorMetadataSet = MethodUtils.getConstructorSet(tClass);
+            return constructorMetadataSet;
         }
     }
 

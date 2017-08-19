@@ -27,7 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * 服务运行状态，分为 开启/未开启 初始化/未初始化 运行/未运行 繁忙/空闲 销毁/未销毁 异常/正常 六个状态
+ * 其中异常/正常状态可以出现在服务运行的任意阶段，如果状态为异常，那么状态一定是被关闭（未开启）的
+ * 只有服务处于开启状态且已初始化，才可能为运行状态
+ * 只有服务处于运行状态，才可能为繁忙状态
+ * 如果服务处于销毁状态，那么一定不会处于开启/运行/繁忙状态
+ * 服务可以未初始化就被销毁
  *
  * @author PeKnight
  *
@@ -85,52 +90,64 @@ public class State {
         return (state & ERROR) == ERROR;
     }
 
-    public void setOpen(boolean isOpen) {
+    public boolean setOpen(boolean isOpen) {
         if ((state & (INIT | RUNNING | BUSY | FINALIZE | ERROR)) != 0) {
             LOGGER.warn("Can Not Open");
+            return false;
         } else {
             state = (byte) (isOpen ? OPEN : ERROR);
+            return true;
         }
     }
 
-    public void setInit(boolean isInit) {
+    public boolean setInit(boolean isInit) {
         if ((state & (RUNNING | BUSY | FINALIZE | ERROR)) != 0 ) {
             LOGGER.warn("Can Not Init");
+            return false;
         } else {
             state = (byte) (isInit ? OPEN | INIT : INIT | ERROR);
+            return true;
         }
     }
 
-    public void setRunning(boolean isRunning) {
+    public boolean setRunning(boolean isRunning) {
         if ((state & (BUSY | FINALIZE | ERROR)) != 0) {
             LOGGER.warn("Can Not Set Running");
+            return false;
         } else {
             state = (byte) (isRunning ? OPEN | INIT | RUNNING : OPEN | INIT);
+            return true;
         }
     }
 
-    public void setBusy(boolean isBusy) {
+    public boolean setBusy(boolean isBusy) {
         if ((state & (FINALIZE | ERROR)) != 0) {
             LOGGER.warn("Can Not Set Busy");
+            return false;
         } else {
             state = (byte) (isBusy ? OPEN | INIT | RUNNING | BUSY : OPEN | INIT | RUNNING);
+            return true;
         }
     }
 
-    public void setFinalize(boolean isFinalize) {
+    public boolean setFinalize(boolean isFinalize) {
         if ((state & OPEN) != OPEN) {
             LOGGER.warn("Not Opened");
+            return false;
         } else {
             state = (byte) (isFinalize ? state & ~OPEN & ~RUNNING & ~BUSY | FINALIZE : state & ~OPEN & ~RUNNING & ~BUSY | FINALIZE | ERROR);
+            return true;
         }
     }
 
-    public void setError(boolean isError) {
+    public boolean setError(boolean isError) {
         state = (byte) (isError ? state & ~OPEN | ERROR : state & ~ERROR);
+        return true;
     }
 
-    public void refresh() {
+    public boolean refresh() {
         state = NEW;
+        return true;
     }
 
     public String info() {

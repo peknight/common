@@ -31,6 +31,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import org.springframework.core.annotation.Order;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -43,6 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * Created by PeKnight on 2017/6/21.
  */
+@Order(0)
 @Aspect
 public class CommonLogAspect {
     private static final Map<Method, long[]> EXECUTE_TIME = new ConcurrentHashMap<>();

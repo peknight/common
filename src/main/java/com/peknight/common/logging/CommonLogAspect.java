@@ -23,7 +23,6 @@
  */
 package com.peknight.common.logging;
 
-import com.peknight.common.annotation.Param;
 import com.peknight.common.string.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -33,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,34 +66,23 @@ public class CommonLogAspect {
     }
 
     public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, Logger logger, Level level) throws Throwable {
-        Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
+        Method method = methodSignature.getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
-        Annotation[][] annotations = method.getParameterAnnotations();
         if (!EXECUTE_TIME.containsKey(method)) {
             EXECUTE_TIME.put(method, new long[2]);
         }
         long[] executeTime = EXECUTE_TIME.get(method);
         int index = (int) ++executeTime[1];
+        String[] parameterNames = methodSignature.getParameterNames();
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
                 if (i > 0) {
                     paramStringBuilder.append(", ");
                 }
-                paramStringBuilder.append("(").append(args[i].getClass().getSimpleName()).append(" ");
-                String paramName = null;
-                for (Annotation annotation : annotations[i]) {
-                    if (annotation.annotationType() == Param.class) {
-                        paramName = ((Param) annotation).value();
-                        break;
-                    }
-                }
-                if (paramName == null) {
-                    paramStringBuilder.append("arg").append(i);
-                } else {
-                    paramStringBuilder.append(paramName);
-                }
-                paramStringBuilder.append(") ").append(StringUtils.toString(args[i]));
+                paramStringBuilder.append("(").append(args[i].getClass().getSimpleName()).append(" ")
+                        .append(parameterNames[i]).append(") ").append(StringUtils.toString(args[i]));
             }
         }
 

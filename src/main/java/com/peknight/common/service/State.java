@@ -38,9 +38,9 @@ import org.slf4j.LoggerFactory;
  *
  * Created by PeKnight on 2017/8/11.
  */
-public class State {
+public class State implements Comparable<State> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(State.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(State.class);
 
     public static final byte NEW = 0;
 
@@ -56,7 +56,7 @@ public class State {
 
     public static final byte ERROR = 1 << 5;
 
-    private byte state;
+    protected byte state;
 
     public State() {
         this.state = NEW;
@@ -95,7 +95,7 @@ public class State {
             LOGGER.warn("Can Not Open");
             return false;
         } else {
-            state = (byte) (isOpen ? OPEN : ERROR);
+            state = (byte) (isOpen ? state | OPEN : state | ERROR);
             return true;
         }
     }
@@ -105,7 +105,7 @@ public class State {
             LOGGER.warn("Can Not Init");
             return false;
         } else {
-            state = (byte) (isInit ? OPEN | INIT : INIT | ERROR);
+            state = (byte) (isInit ? state | OPEN | INIT : state | INIT | ERROR & ~OPEN);
             return true;
         }
     }
@@ -115,7 +115,7 @@ public class State {
             LOGGER.warn("Can Not Set Running");
             return false;
         } else {
-            state = (byte) (isRunning ? OPEN | INIT | RUNNING : OPEN | INIT);
+            state = (byte) (isRunning ? state | OPEN | INIT | RUNNING : state | OPEN | INIT & ~RUNNING);
             return true;
         }
     }
@@ -125,7 +125,7 @@ public class State {
             LOGGER.warn("Can Not Set Busy");
             return false;
         } else {
-            state = (byte) (isBusy ? OPEN | INIT | RUNNING | BUSY : OPEN | INIT | RUNNING);
+            state = (byte) (isBusy ? state | OPEN | INIT | RUNNING | BUSY : state | OPEN | INIT | RUNNING & ~BUSY);
             return true;
         }
     }
@@ -152,15 +152,15 @@ public class State {
 
     public String info() {
         if ((state & (ERROR | BUSY)) == (ERROR | BUSY)) {
-            return "ERROR WHEN [BUSY]";
+            return "ERROR [BUSY]";
         } else if ((state & (ERROR | RUNNING)) == (ERROR | RUNNING)) {
-            return "ERROR WHEN [RUNNING]";
+            return "ERROR [RUNNING]";
         } else if ((state & (ERROR | FINALIZE)) == (ERROR | FINALIZE)) {
-            return "ERROR WHEN [FINALIZE]";
+            return "ERROR [FINALIZE]";
         } else if (state == (ERROR | INIT)) {
-            return "ERROR WHEN [INIT]";
+            return "ERROR [INIT]";
         } else if (state == ERROR) {
-            return "ERROR WHEN [OPEN]";
+            return "ERROR [OPEN]";
         } else if ((state & FINALIZE) == FINALIZE) {
             return "FINALIZED";
         } else if ((state & BUSY) == BUSY) {
@@ -187,6 +187,37 @@ public class State {
         State state1 = (State) o;
 
         return state == state1.state;
+    }
+
+    private int priority() {
+        if ((state & ERROR) == ERROR) {
+            return 0;
+        }
+        if ((state & FINALIZE) == FINALIZE) {
+            return 1 << 0;
+        }
+        if ((state & BUSY) == BUSY) {
+            return 1 << 1;
+        }
+        if ((state & RUNNING) == RUNNING) {
+            return 1 << 5;
+        }
+        if ((state & INIT) == INIT) {
+            return 1 << 4;
+        }
+        if ((state & OPEN) == OPEN) {
+            return 1 << 3;
+        }
+        return 1 << 2;
+    }
+
+    @Override
+    public int compareTo(State o) {
+        int oPriority = -1;
+        if (o != null) {
+            oPriority = o.priority();
+        }
+        return this.priority() - oPriority;
     }
 
     @Override

@@ -77,6 +77,12 @@ public class CommonLogAspect {
         long[] executeTime = EXECUTE_TIME.get(method);
         int index = (int) ++executeTime[1];
         String[] parameterNames = methodSignature.getParameterNames();
+        if (parameterNames == null) {
+            parameterNames = new String[args.length];
+            for (int i = 0; i < parameterNames.length; i++) {
+                parameterNames[i] = "arg" + i;
+            }
+        }
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {

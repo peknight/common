@@ -54,7 +54,9 @@ public class State implements Comparable<State> {
 
     public static final byte FINALIZE = 1 << 4;
 
-    public static final byte ERROR = 1 << 5;
+    public static final byte WARN = 1 << 5;
+
+    public static final byte ERROR = 1 << 6;
 
     protected byte state;
 
@@ -84,6 +86,10 @@ public class State implements Comparable<State> {
 
     public boolean isFinalize() {
         return (state & ERROR) != ERROR && (state & FINALIZE) == FINALIZE;
+    }
+
+    public boolean isWarn() {
+        return (state & WARN) == WARN;
     }
 
     public boolean isError() {
@@ -140,6 +146,11 @@ public class State implements Comparable<State> {
         }
     }
 
+    public boolean setWarn(boolean isWarn) {
+        state = (byte) (isWarn ? state | WARN : state & ~WARN);
+        return true;
+    }
+
     public boolean setError(boolean isError) {
         state = (byte) (isError ? state & ~OPEN | ERROR : state & ~ERROR);
         return true;
@@ -151,32 +162,37 @@ public class State implements Comparable<State> {
     }
 
     public String info() {
+        StringBuilder builder = new StringBuilder("");
+        if ((state & WARN) == WARN) {
+            builder.append("!");
+        }
         if ((state & (ERROR | BUSY)) == (ERROR | BUSY)) {
-            return "ERROR [BUSY]";
+            builder.append("ERROR [BUSY]");
         } else if ((state & (ERROR | RUNNING)) == (ERROR | RUNNING)) {
-            return "ERROR [RUNNING]";
+            builder.append("ERROR [RUNNING]");
         } else if ((state & (ERROR | FINALIZE)) == (ERROR | FINALIZE)) {
-            return "ERROR [FINALIZE]";
+            builder.append("ERROR [FINALIZE]");
         } else if (state == (ERROR | INIT)) {
-            return "ERROR [INIT]";
+            builder.append("ERROR [INIT]");
         } else if (state == ERROR) {
-            return "ERROR [OPEN]";
+            builder.append("ERROR [OPEN]");
         } else if ((state & FINALIZE) == FINALIZE) {
-            return "FINALIZED";
+            builder.append("FINALIZED");
         } else if ((state & BUSY) == BUSY) {
-            return "BUSY";
+            builder.append("BUSY");
         } else if ((state & RUNNING) == RUNNING) {
-            return "RUNNING";
+            builder.append("RUNNING");
         } else if ((state & INIT) == INIT) {
-            return "INIT";
+            builder.append("INIT");
         } else if ((state & OPEN) == OPEN) {
-            return "OPEN";
+            builder.append("OPEN");
         } else if (state == NEW) {
-            return "NEW";
+            builder.append("NEW");
         } else {
             LOGGER.error("Impossible!? state={}", Integer.toBinaryString(state));
-            return "Impossible!? state=" + Integer.toBinaryString(state);
+            builder.append("Impossible!? state=" + Integer.toBinaryString(state));
         }
+        return builder.toString();
     }
 
     @Override
@@ -197,18 +213,18 @@ public class State implements Comparable<State> {
             return 1 << 0;
         }
         if ((state & BUSY) == BUSY) {
-            return 1 << 1;
+            return 1 << 4;
         }
         if ((state & RUNNING) == RUNNING) {
             return 1 << 5;
         }
         if ((state & INIT) == INIT) {
-            return 1 << 4;
-        }
-        if ((state & OPEN) == OPEN) {
             return 1 << 3;
         }
-        return 1 << 2;
+        if ((state & OPEN) == OPEN) {
+            return 1 << 2;
+        }
+        return 1 << 1;
     }
 
     @Override

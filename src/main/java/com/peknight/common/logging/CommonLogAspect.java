@@ -36,6 +36,7 @@ import org.springframework.core.annotation.Order;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
  * Common Log Aspect
@@ -47,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Order(0)
 @Aspect
 public class CommonLogAspect {
-    private static final Map<Method, long[]> EXECUTE_TIME = new ConcurrentHashMap<>();
+    private static final Map<Method, AtomicLongArray> EXECUTE_TIME = new ConcurrentHashMap<>();
 
     @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
@@ -72,10 +73,10 @@ public class CommonLogAspect {
         Method method = methodSignature.getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
         if (!EXECUTE_TIME.containsKey(method)) {
-            EXECUTE_TIME.put(method, new long[2]);
+            EXECUTE_TIME.put(method, new AtomicLongArray(2));
         }
-        long[] executeTime = EXECUTE_TIME.get(method);
-        int index = (int) ++executeTime[1];
+        AtomicLongArray executeTime = EXECUTE_TIME.get(method);
+        long index = executeTime.incrementAndGet(1);
         String[] parameterNames = methodSignature.getParameterNames();
         if (parameterNames == null) {
             parameterNames = new String[args.length];
@@ -103,13 +104,13 @@ public class CommonLogAspect {
         try {
             Object object = proceedingJoinPoint.proceed();
             taskTime = System.currentTimeMillis() - start;
-            executeTime[0] += taskTime;
-            postLogger(logger, level, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), object);
+            executeTime.addAndGet(0, taskTime);
+            postLogger(logger, level, methodInfo, taskTime, executeTime.get(0) / executeTime.get(1), method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
             taskTime = System.currentTimeMillis() - start;
-            executeTime[0] += taskTime;
-            postErrorLogger(logger, methodInfo, taskTime, executeTime[0] / executeTime[1], method.getReturnType().getSimpleName(), e);
+            executeTime.addAndGet(0, taskTime);
+            postErrorLogger(logger, methodInfo, taskTime, executeTime.get(0) / executeTime.get(1), method.getReturnType().getSimpleName(), e);
             throw e;
         }
     }

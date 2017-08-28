@@ -111,17 +111,17 @@ public class State implements Comparable<State> {
             LOGGER.warn("Can Not Init");
             return false;
         } else {
-            state = (byte) (isInit ? state | OPEN | INIT : state | INIT | ERROR & ~OPEN);
+            state = (byte) (isInit ? state | OPEN | INIT : (state | INIT | ERROR) & ~OPEN);
             return true;
         }
     }
 
     public boolean setRunning(boolean isRunning) {
-        if ((state & (BUSY | FINALIZE | ERROR)) != 0) {
+        if ((state & (FINALIZE | ERROR)) != 0) {
             LOGGER.warn("Can Not Set Running");
             return false;
         } else {
-            state = (byte) (isRunning ? state | OPEN | INIT | RUNNING : state | OPEN | INIT & ~RUNNING);
+            state = (byte) (isRunning ? state | OPEN | INIT | RUNNING : (state | OPEN | INIT) & ~RUNNING & ~BUSY);
             return true;
         }
     }
@@ -131,7 +131,7 @@ public class State implements Comparable<State> {
             LOGGER.warn("Can Not Set Busy");
             return false;
         } else {
-            state = (byte) (isBusy ? state | OPEN | INIT | RUNNING | BUSY : state | OPEN | INIT | RUNNING & ~BUSY);
+            state = (byte) (isBusy ? state | OPEN | INIT | RUNNING | BUSY : (state | OPEN | INIT | RUNNING) & ~BUSY);
             return true;
         }
     }
@@ -141,7 +141,7 @@ public class State implements Comparable<State> {
             LOGGER.warn("Not Opened");
             return false;
         } else {
-            state = (byte) (isFinalize ? state & ~OPEN & ~RUNNING & ~BUSY | FINALIZE : state & ~OPEN & ~RUNNING & ~BUSY | FINALIZE | ERROR);
+            state = (byte) (isFinalize ? (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZE : (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZE | ERROR);
             return true;
         }
     }
@@ -152,7 +152,7 @@ public class State implements Comparable<State> {
     }
 
     public boolean setError(boolean isError) {
-        state = (byte) (isError ? state & ~OPEN | ERROR : state & ~ERROR);
+        state = (byte) (isError ? (state & ~OPEN) | ERROR : state & ~ERROR);
         return true;
     }
 
@@ -163,18 +163,15 @@ public class State implements Comparable<State> {
 
     public String info() {
         StringBuilder builder = new StringBuilder("");
-        if ((state & WARN) == WARN) {
-            builder.append("!");
-        }
         if ((state & (ERROR | BUSY)) == (ERROR | BUSY)) {
             builder.append("ERROR [BUSY]");
         } else if ((state & (ERROR | RUNNING)) == (ERROR | RUNNING)) {
             builder.append("ERROR [RUNNING]");
         } else if ((state & (ERROR | FINALIZE)) == (ERROR | FINALIZE)) {
             builder.append("ERROR [FINALIZE]");
-        } else if (state == (ERROR | INIT)) {
+        } else if ((state & (ERROR | INIT)) == (ERROR | INIT)) {
             builder.append("ERROR [INIT]");
-        } else if (state == ERROR) {
+        } else if ((state & ERROR) == ERROR) {
             builder.append("ERROR [OPEN]");
         } else if ((state & FINALIZE) == FINALIZE) {
             builder.append("FINALIZED");
@@ -186,11 +183,14 @@ public class State implements Comparable<State> {
             builder.append("INIT");
         } else if ((state & OPEN) == OPEN) {
             builder.append("OPEN");
-        } else if (state == NEW) {
+        } else if ((state & ~WARN ) == NEW) {
             builder.append("NEW");
         } else {
             LOGGER.error("Impossible!? state={}", Integer.toBinaryString(state));
             builder.append("Impossible!? state=" + Integer.toBinaryString(state));
+        }
+        if ((state & WARN) == WARN) {
+            builder.append(" [WARN]");
         }
         return builder.toString();
     }

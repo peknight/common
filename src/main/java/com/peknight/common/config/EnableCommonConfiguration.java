@@ -23,6 +23,8 @@
  */
 package com.peknight.common.config;
 
+import com.peknight.common.logging.CommonLogAspect;
+import com.peknight.common.springframework.context.ApplicationContextHolder;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.Documented;
@@ -43,6 +45,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Import({CommonConfig.class})
+@Import({ApplicationContextHolder.class, CommonLogAspect.class})
 public @interface EnableCommonConfiguration {
 }

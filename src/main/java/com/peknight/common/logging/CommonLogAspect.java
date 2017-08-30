@@ -37,6 +37,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.function.Function;
 
 /**
  * Common Log Aspect
@@ -49,6 +50,8 @@ import java.util.concurrent.atomic.AtomicLongArray;
 @Aspect
 public class CommonLogAspect {
     private static final Map<Method, AtomicLongArray> EXECUTE_TIME = new ConcurrentHashMap<>();
+
+    private static final Function<Method, AtomicLongArray> COMPUTE_FUNCTION= method -> new AtomicLongArray(2);
 
     @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
@@ -72,9 +75,7 @@ public class CommonLogAspect {
         MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
         Method method = methodSignature.getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
-        if (!EXECUTE_TIME.containsKey(method)) {
-            EXECUTE_TIME.put(method, new AtomicLongArray(2));
-        }
+        EXECUTE_TIME.computeIfAbsent(method, COMPUTE_FUNCTION);
         AtomicLongArray executeTime = EXECUTE_TIME.get(method);
         long index = executeTime.incrementAndGet(1);
         String[] parameterNames = methodSignature.getParameterNames();

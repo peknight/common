@@ -162,37 +162,186 @@ public class State implements Comparable<State> {
     }
 
     public String info() {
-        StringBuilder builder = new StringBuilder("");
-        if ((state & (ERROR | BUSY)) == (ERROR | BUSY)) {
-            builder.append("ERROR [BUSY]");
-        } else if ((state & (ERROR | RUNNING)) == (ERROR | RUNNING)) {
-            builder.append("ERROR [RUNNING]");
-        } else if ((state & (ERROR | FINALIZE)) == (ERROR | FINALIZE)) {
-            builder.append("ERROR [FINALIZE]");
-        } else if ((state & (ERROR | INIT)) == (ERROR | INIT)) {
-            builder.append("ERROR [INIT]");
-        } else if ((state & ERROR) == ERROR) {
-            builder.append("ERROR [OPEN]");
-        } else if ((state & FINALIZE) == FINALIZE) {
-            builder.append("FINALIZED");
-        } else if ((state & BUSY) == BUSY) {
-            builder.append("BUSY");
-        } else if ((state & RUNNING) == RUNNING) {
-            builder.append("RUNNING");
-        } else if ((state & INIT) == INIT) {
-            builder.append("INIT");
-        } else if ((state & OPEN) == OPEN) {
-            builder.append("OPEN");
-        } else if ((state & ~WARN ) == NEW) {
-            builder.append("NEW");
-        } else {
-            LOGGER.error("Impossible!? state={}", Integer.toBinaryString(state));
-            builder.append("Impossible!? state=" + Integer.toBinaryString(state));
+        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZE | WARN | ERROR);
+        switch (basicState) {
+            case NEW:
+                return "NEW";
+            case NEW | WARN:
+                return "NEW [WARN]";
+            case OPEN:
+                return "OPEN";
+            case OPEN | WARN:
+                return "OPEN [WARN]";
+            case OPEN | INIT:
+                return "INIT";
+            case OPEN | INIT | WARN:
+                return "INIT [WARN]";
+            case OPEN | INIT | RUNNING:
+                return "RUNNING";
+            case OPEN | INIT | RUNNING | WARN:
+                return "RUNNING [WARN]";
+            case OPEN | INIT | RUNNING | BUSY:
+                return "BUSY";
+            case OPEN | INIT | RUNNING | BUSY | WARN:
+                return "BUSY [WARN]";
+            case FINALIZE:
+                return "FINALIZED [NO INIT]";
+            case FINALIZE | WARN:
+                return "FINALIZED [WARN, NO INIT]";
+            case INIT | FINALIZE:
+                return "FINALIZED";
+            case INIT | FINALIZE | WARN:
+                return "FINALIZED [WARN]";
+            case ERROR:
+                return "ERROR [OPEN]";
+            case WARN | ERROR:
+                return "ERROR [OPEN, WARN]";
+            case INIT | ERROR:
+                return "ERROR [INIT]";
+            case INIT | WARN | ERROR:
+                return "ERROR [INIT, WARN]";
+            case INIT | RUNNING | ERROR:
+                return "ERROR [RUNNING]";
+            case INIT | RUNNING | WARN | ERROR:
+                return "ERROR [RUNNING, WARN]";
+            case INIT | RUNNING | BUSY | ERROR:
+                return "ERROR [BUSY]";
+            case INIT | RUNNING | BUSY | WARN | ERROR:
+                return "ERROR [BUSY, WARN]";
+            case FINALIZE | ERROR:
+                return "ERROR [FINALIZED, NO INIT]";
+            case FINALIZE | WARN | ERROR:
+                return "ERROR [FINALIZED, WARN, NO INIT]";
+            case INIT | FINALIZE | ERROR:
+                return "ERROR [FINALIZED]";
+            case INIT | FINALIZE | WARN | ERROR:
+                return "ERROR [FINALIZED, WARN]";
+            default:
+                LOGGER.error("No Such State [{}]", state);
+                return "NO SUCH STATE";
         }
-        if ((state & WARN) == WARN) {
-            builder.append(" [WARN]");
+    }
+
+    public String simpleInfo() {
+        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZE | WARN | ERROR);
+        switch (basicState) {
+            case NEW:
+                return "N";
+            case NEW | WARN:
+                return "n";
+            case OPEN:
+                return "O";
+            case OPEN | WARN:
+                return "o";
+            case OPEN | INIT:
+                return "I";
+            case OPEN | INIT | WARN:
+                return "i";
+            case OPEN | INIT | RUNNING:
+                return "R";
+            case OPEN | INIT | RUNNING | WARN:
+                return "r";
+            case OPEN | INIT | RUNNING | BUSY:
+                return "B";
+            case OPEN | INIT | RUNNING | BUSY | WARN:
+                return "b";
+            case FINALIZE:
+                return "D";
+            case FINALIZE | WARN:
+                return "d";
+            case INIT | FINALIZE:
+                return "F";
+            case INIT | FINALIZE | WARN:
+                return "f";
+            case ERROR:
+                return "EO";
+            case WARN | ERROR:
+                return "Eo";
+            case INIT | ERROR:
+                return "EI";
+            case INIT | WARN | ERROR:
+                return "Ei";
+            case INIT | RUNNING | ERROR:
+                return "ER";
+            case INIT | RUNNING | WARN | ERROR:
+                return "Er";
+            case INIT | RUNNING | BUSY | ERROR:
+                return "EB";
+            case INIT | RUNNING | BUSY | WARN | ERROR:
+                return "Eb";
+            case FINALIZE | ERROR:
+                return "ED";
+            case FINALIZE | WARN | ERROR:
+                return "Ed";
+            case INIT | FINALIZE | ERROR:
+                return "EF";
+            case INIT | FINALIZE | WARN | ERROR:
+                return "Ef";
+            default:
+                LOGGER.error("No Such State [{}]", state);
+                return "NSS";
         }
-        return builder.toString();
+    }
+
+    public int priority() {
+        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZE | WARN | ERROR);
+        switch (basicState) {
+            case OPEN | INIT | RUNNING:
+                return 1 << 13;
+            case OPEN | INIT | RUNNING | WARN:
+                return 1 << 12;
+            case OPEN | INIT | RUNNING | BUSY:
+                return 1 << 11;
+            case OPEN | INIT | RUNNING | BUSY | WARN:
+                return 1 << 10;
+            case OPEN | INIT:
+                return 1 << 9;
+            case OPEN | INIT | WARN:
+                return 1 << 8;
+            case OPEN:
+                return 1 << 7;
+            case OPEN | WARN:
+                return 1 << 6;
+            case NEW:
+                return 1 << 5;
+            case NEW | WARN:
+                return 1 << 4;
+            case INIT | FINALIZE:
+                return 1 << 3;
+            case INIT | FINALIZE | WARN:
+                return 1 << 2;
+            case FINALIZE:
+                return 1 << 1;
+            case FINALIZE | WARN:
+                return 1 << 0;
+            case ERROR:
+                return 0;
+            case WARN | ERROR:
+                return -1 << 0;
+            case INIT | ERROR:
+                return -1 << 1;
+            case INIT | WARN | ERROR:
+                return -1 << 2;
+            case INIT | RUNNING | ERROR:
+                return -1 << 3;
+            case INIT | RUNNING | WARN | ERROR:
+                return -1 << 4;
+            case INIT | RUNNING | BUSY | ERROR:
+                return -1 << 5;
+            case INIT | RUNNING | BUSY | WARN | ERROR:
+                return -1 << 6;
+            case FINALIZE | ERROR:
+                return -1 << 7;
+            case FINALIZE | WARN | ERROR:
+                return -1 << 8;
+            case INIT | FINALIZE | ERROR:
+                return -1 << 9;
+            case INIT | FINALIZE | WARN | ERROR:
+                return -1 << 10;
+            default:
+                LOGGER.error("No Such State [{}]", state);
+                return -1 << 11;
+        }
     }
 
     @Override
@@ -200,36 +349,14 @@ public class State implements Comparable<State> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        State state1 = (State) o;
+        State oState = (State) o;
 
-        return state == state1.state;
-    }
-
-    private int priority() {
-        if ((state & ERROR) == ERROR) {
-            return 0;
-        }
-        if ((state & FINALIZE) == FINALIZE) {
-            return 1 << 0;
-        }
-        if ((state & BUSY) == BUSY) {
-            return 1 << 4;
-        }
-        if ((state & RUNNING) == RUNNING) {
-            return 1 << 5;
-        }
-        if ((state & INIT) == INIT) {
-            return 1 << 3;
-        }
-        if ((state & OPEN) == OPEN) {
-            return 1 << 2;
-        }
-        return 1 << 1;
+        return state == oState.state;
     }
 
     @Override
     public int compareTo(State o) {
-        int oPriority = -1;
+        int oPriority = -1 << 12;
         if (o != null) {
             oPriority = o.priority();
         }

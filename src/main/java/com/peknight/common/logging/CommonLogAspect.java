@@ -140,6 +140,7 @@ public class CommonLogAspect {
         }
         // 拼接方法名和方法执行次数
         String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
+        // 打印方法执行前日志
         preLogger(logger, level, methodInfo, paramStringBuilder);
 
         // 记录开始时间

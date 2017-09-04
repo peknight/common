@@ -56,6 +56,7 @@ public class CommonLogAspect {
     /**
      * 为每个方法执行计数计时的Map，使用ConcurrentHashMap保证线程安全
      * Key为Method对应计数计时的方法，AtomicLongArray为一个长度为2的long型原子数组（保证线程安全）
+     * 数据第一个元素表示此方法执行的总时间，第二个元素表示此方法执行的总次数，相处即为平均执行时间
      */
     private static final Map<Method, AtomicLongArray> EXECUTE_TIME = new ConcurrentHashMap<>();
 
@@ -66,13 +67,10 @@ public class CommonLogAspect {
 
     /**
      * 拦截类上或方法注解@CommonLog的所有方法
-     *
      */
     @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        // 获取方法信息
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
-
         // 获取方法上的CommonLog注解，如果没有则获取类上的CommonLog注解
         CommonLog commonLog;
         if (method.isAnnotationPresent(CommonLog.class)) {
@@ -99,11 +97,8 @@ public class CommonLogAspect {
      * 打印日志
      */
     public static Object commonLog(ProceedingJoinPoint proceedingJoinPoint, Logger logger, Level level) throws Throwable {
-        // 获取方法签名
         MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
-        // 获取方法
         Method method = methodSignature.getMethod();
-        // 获取方法参数
         Object[] args = proceedingJoinPoint.getArgs();
         // 获取方法参数类型（注意空指针）
         Class[] parameterTypes = methodSignature.getParameterTypes();
@@ -121,13 +116,9 @@ public class CommonLogAspect {
                 parameterNames[i] = "arg" + i;
             }
         }
-        // 如果EXECUTE_TIME中未记录这个Method，那么记录Method
         EXECUTE_TIME.computeIfAbsent(method, COMPUTE_FUNCTION);
-        // 获取用于计时的数组，第一个元素表示这个方法执行的总时间，第二个元素表示这个方法执行的次数，相除即平均时间
         AtomicLongArray executeTime = EXECUTE_TIME.get(method);
-        // 方法执行次数（自增）
         long index = executeTime.incrementAndGet(1);
-        // 生成参数列表：参数类型、参数名、参数值
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
@@ -138,32 +129,21 @@ public class CommonLogAspect {
                         .append(parameterNames[i]).append(") ").append(StringUtils.toString(args[i]));
             }
         }
-        // 拼接方法名和方法执行次数
         String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
-        // 打印方法执行前日志
         preLogger(logger, level, methodInfo, paramStringBuilder);
 
-        // 记录开始时间
         long start = System.currentTimeMillis();
         long taskTime;
 
         try {
-            // 执行方法，获取返回值
             Object object = proceedingJoinPoint.proceed();
-            // 记录此次方法执行时间
             taskTime = System.currentTimeMillis() - start;
-            // 将此次用时计入总时间
             executeTime.addAndGet(0, taskTime);
-            // 打印执行完毕后的日志
             postLogger(logger, level, methodInfo, taskTime, executeTime.get(0) / executeTime.get(1), method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
-            // 出现异常的情况
-            // 记录此次方法执行时间
             taskTime = System.currentTimeMillis() - start;
-            // 将此次用时计入总时间
             executeTime.addAndGet(0, taskTime);
-            // 打印执行异常后的日志
             postErrorLogger(logger, methodInfo, taskTime, executeTime.get(0) / executeTime.get(1), method.getReturnType().getSimpleName(), e);
             throw e;
         }

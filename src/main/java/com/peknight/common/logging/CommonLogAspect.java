@@ -75,9 +75,13 @@ public class CommonLogAspect {
         MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
         Method method = methodSignature.getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
-        EXECUTE_TIME.computeIfAbsent(method, COMPUTE_FUNCTION);
-        AtomicLongArray executeTime = EXECUTE_TIME.get(method);
-        long index = executeTime.incrementAndGet(1);
+        Class[] parameterTypes = methodSignature.getParameterTypes();
+        if (parameterTypes == null) {
+            parameterTypes = new Class[args.length];
+            for (int i = 0; i < parameterTypes.length; i++) {
+                parameterTypes[i] = args[i].getClass();
+            }
+        }
         String[] parameterNames = methodSignature.getParameterNames();
         if (parameterNames == null) {
             parameterNames = new String[args.length];
@@ -85,17 +89,19 @@ public class CommonLogAspect {
                 parameterNames[i] = "arg" + i;
             }
         }
+        EXECUTE_TIME.computeIfAbsent(method, COMPUTE_FUNCTION);
+        AtomicLongArray executeTime = EXECUTE_TIME.get(method);
+        long index = executeTime.incrementAndGet(1);
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
                 if (i > 0) {
                     paramStringBuilder.append(", ");
                 }
-                paramStringBuilder.append("(").append(args[i].getClass().getSimpleName()).append(" ")
+                paramStringBuilder.append("(").append(parameterTypes[i].getSimpleName()).append(" ")
                         .append(parameterNames[i]).append(") ").append(StringUtils.toString(args[i]));
             }
         }
-
         String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
         preLogger(logger, level, methodInfo, paramStringBuilder);
 

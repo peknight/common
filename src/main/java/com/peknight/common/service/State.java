@@ -52,7 +52,7 @@ public class State implements Comparable<State> {
 
     public static final byte BUSY = 1 << 3;
 
-    public static final byte FINALIZE = 1 << 4;
+    public static final byte FINALIZED = 1 << 4;
 
     public static final byte WARN = 1 << 5;
 
@@ -84,8 +84,8 @@ public class State implements Comparable<State> {
         return (state & ERROR) != ERROR && (state & BUSY) == BUSY;
     }
 
-    public boolean isFinalize() {
-        return (state & ERROR) != ERROR && (state & FINALIZE) == FINALIZE;
+    public boolean isFinalized() {
+        return (state & ERROR) != ERROR && (state & FINALIZED) == FINALIZED;
     }
 
     public boolean isWarn() {
@@ -97,7 +97,7 @@ public class State implements Comparable<State> {
     }
 
     public boolean setOpen(boolean isOpen) {
-        if ((state & (INIT | RUNNING | BUSY | FINALIZE | ERROR)) != 0) {
+        if ((state & (INIT | RUNNING | BUSY | FINALIZED | ERROR)) != 0) {
             LOGGER.warn("Can Not Open");
             return false;
         } else {
@@ -107,7 +107,7 @@ public class State implements Comparable<State> {
     }
 
     public boolean setInit(boolean isInit) {
-        if ((state & (RUNNING | BUSY | FINALIZE | ERROR)) != 0 ) {
+        if ((state & (RUNNING | BUSY | FINALIZED | ERROR)) != 0 ) {
             LOGGER.warn("Can Not Init");
             return false;
         } else {
@@ -117,7 +117,7 @@ public class State implements Comparable<State> {
     }
 
     public boolean setRunning(boolean isRunning) {
-        if ((state & (FINALIZE | ERROR)) != 0) {
+        if ((state & (FINALIZED | ERROR)) != 0) {
             LOGGER.warn("Can Not Set Running");
             return false;
         } else {
@@ -127,7 +127,7 @@ public class State implements Comparable<State> {
     }
 
     public boolean setBusy(boolean isBusy) {
-        if ((state & (FINALIZE | ERROR)) != 0) {
+        if ((state & (FINALIZED | ERROR)) != 0) {
             LOGGER.warn("Can Not Set Busy");
             return false;
         } else {
@@ -136,12 +136,12 @@ public class State implements Comparable<State> {
         }
     }
 
-    public boolean setFinalize(boolean isFinalize) {
+    public boolean setFinalized(boolean isFinalized) {
         if ((state & OPEN) != OPEN) {
             LOGGER.warn("Not Opened");
             return false;
         } else {
-            state = (byte) (isFinalize ? (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZE : (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZE | ERROR);
+            state = (byte) (isFinalized ? (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZED : (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZED | ERROR);
             return true;
         }
     }
@@ -162,7 +162,7 @@ public class State implements Comparable<State> {
     }
 
     public String info() {
-        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZE | WARN | ERROR);
+        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case NEW:
                 return "NEW";
@@ -184,13 +184,13 @@ public class State implements Comparable<State> {
                 return "BUSY";
             case OPEN | INIT | RUNNING | BUSY | WARN:
                 return "BUSY [WARN]";
-            case FINALIZE:
+            case FINALIZED:
                 return "FINALIZED [NO INIT]";
-            case FINALIZE | WARN:
+            case FINALIZED | WARN:
                 return "FINALIZED [WARN, NO INIT]";
-            case INIT | FINALIZE:
+            case INIT | FINALIZED:
                 return "FINALIZED";
-            case INIT | FINALIZE | WARN:
+            case INIT | FINALIZED | WARN:
                 return "FINALIZED [WARN]";
             case ERROR:
                 return "ERROR [OPEN]";
@@ -208,13 +208,13 @@ public class State implements Comparable<State> {
                 return "ERROR [BUSY]";
             case INIT | RUNNING | BUSY | WARN | ERROR:
                 return "ERROR [BUSY, WARN]";
-            case FINALIZE | ERROR:
+            case FINALIZED | ERROR:
                 return "ERROR [FINALIZED, NO INIT]";
-            case FINALIZE | WARN | ERROR:
+            case FINALIZED | WARN | ERROR:
                 return "ERROR [FINALIZED, WARN, NO INIT]";
-            case INIT | FINALIZE | ERROR:
+            case INIT | FINALIZED | ERROR:
                 return "ERROR [FINALIZED]";
-            case INIT | FINALIZE | WARN | ERROR:
+            case INIT | FINALIZED | WARN | ERROR:
                 return "ERROR [FINALIZED, WARN]";
             default:
                 LOGGER.error("No Such State [{}]", state);
@@ -223,7 +223,7 @@ public class State implements Comparable<State> {
     }
 
     public String simpleInfo() {
-        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZE | WARN | ERROR);
+        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case NEW:
                 return "N";
@@ -245,13 +245,13 @@ public class State implements Comparable<State> {
                 return "B";
             case OPEN | INIT | RUNNING | BUSY | WARN:
                 return "b";
-            case FINALIZE:
+            case FINALIZED:
                 return "D";
-            case FINALIZE | WARN:
+            case FINALIZED | WARN:
                 return "d";
-            case INIT | FINALIZE:
+            case INIT | FINALIZED:
                 return "F";
-            case INIT | FINALIZE | WARN:
+            case INIT | FINALIZED | WARN:
                 return "f";
             case ERROR:
                 return "EO";
@@ -269,13 +269,13 @@ public class State implements Comparable<State> {
                 return "EB";
             case INIT | RUNNING | BUSY | WARN | ERROR:
                 return "Eb";
-            case FINALIZE | ERROR:
+            case FINALIZED | ERROR:
                 return "ED";
-            case FINALIZE | WARN | ERROR:
+            case FINALIZED | WARN | ERROR:
                 return "Ed";
-            case INIT | FINALIZE | ERROR:
+            case INIT | FINALIZED | ERROR:
                 return "EF";
-            case INIT | FINALIZE | WARN | ERROR:
+            case INIT | FINALIZED | WARN | ERROR:
                 return "Ef";
             default:
                 LOGGER.error("No Such State [{}]", state);
@@ -284,7 +284,7 @@ public class State implements Comparable<State> {
     }
 
     public int priority() {
-        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZE | WARN | ERROR);
+        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case OPEN | INIT | RUNNING:
                 return 1 << 13;
@@ -306,13 +306,13 @@ public class State implements Comparable<State> {
                 return 1 << 5;
             case NEW | WARN:
                 return 1 << 4;
-            case INIT | FINALIZE:
+            case INIT | FINALIZED:
                 return 1 << 3;
-            case INIT | FINALIZE | WARN:
+            case INIT | FINALIZED | WARN:
                 return 1 << 2;
-            case FINALIZE:
+            case FINALIZED:
                 return 1 << 1;
-            case FINALIZE | WARN:
+            case FINALIZED | WARN:
                 return 1 << 0;
             case ERROR:
                 return 0;
@@ -330,13 +330,13 @@ public class State implements Comparable<State> {
                 return -1 << 5;
             case INIT | RUNNING | BUSY | WARN | ERROR:
                 return -1 << 6;
-            case FINALIZE | ERROR:
+            case FINALIZED | ERROR:
                 return -1 << 7;
-            case FINALIZE | WARN | ERROR:
+            case FINALIZED | WARN | ERROR:
                 return -1 << 8;
-            case INIT | FINALIZE | ERROR:
+            case INIT | FINALIZED | ERROR:
                 return -1 << 9;
-            case INIT | FINALIZE | WARN | ERROR:
+            case INIT | FINALIZED | WARN | ERROR:
                 return -1 << 10;
             default:
                 LOGGER.error("No Such State [{}]", state);

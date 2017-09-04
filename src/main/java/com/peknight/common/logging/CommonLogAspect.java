@@ -84,7 +84,7 @@ public class CommonLogAspect {
         // 获取Method的类的Logger
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
 
-        // 获取被拦截方法的日志等级，如果
+        // 获取被拦截方法的日志等级
         Level level = commonLog.value();
 
         // 如果程序的日志输出等级高于方法的等级，那么不打印日志直接执行方法返回

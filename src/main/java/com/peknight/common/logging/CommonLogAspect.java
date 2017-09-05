@@ -56,7 +56,7 @@ public class CommonLogAspect {
     /**
      * 为每个方法执行计数计时的Map，使用ConcurrentHashMap保证线程安全
      * Key为Method对应计数计时的方法，AtomicLongArray为一个长度为2的long型原子数组（保证线程安全）
-     * 数据第一个元素表示此方法执行的总时间，第二个元素表示此方法执行的总次数，相处即为平均执行时间
+     * 数据第一个元素表示此方法执行的总时间，第二个元素表示此方法执行的总次数，相除即为平均执行时间
      */
     private static final Map<Method, AtomicLongArray> EXECUTE_TIME = new ConcurrentHashMap<>();
 

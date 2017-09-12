@@ -9,5 +9,4 @@ package com.peknight.common.enums;
  */
 public interface IntegerEnum<E extends Enum<E>> {
     int getValue();
-    E findByValue(int value);
 }

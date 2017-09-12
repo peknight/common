@@ -9,5 +9,4 @@ package com.peknight.common.enums;
  */
 public interface ByteEnum<E extends Enum<E>> {
     byte getValue();
-    E findByValue(byte value);
 }

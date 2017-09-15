@@ -47,7 +47,7 @@ public final class ScannerUtils {
     public static String formatNext(String regExp, Scanner scanner, Logger logger) {
         String input;
         while (!(input = scanner.next()).matches(regExp)) {
-            logger.warn("Illegal Format");
+            logger.warn("Illegal Format: {} [regExp: {}]", input , regExp);
         }
         return input;
     }

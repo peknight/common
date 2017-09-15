@@ -167,55 +167,55 @@ public class State implements Comparable<State> {
             case NEW:
                 return "NEW";
             case NEW | WARN:
-                return "NEW [WARN]";
+                return "new";
             case OPEN:
                 return "OPEN";
             case OPEN | WARN:
-                return "OPEN [WARN]";
+                return "open";
             case OPEN | INIT:
                 return "INIT";
             case OPEN | INIT | WARN:
-                return "INIT [WARN]";
+                return "init";
             case OPEN | INIT | RUNNING:
                 return "RUNNING";
             case OPEN | INIT | RUNNING | WARN:
-                return "RUNNING [WARN]";
+                return "running";
             case OPEN | INIT | RUNNING | BUSY:
                 return "BUSY";
             case OPEN | INIT | RUNNING | BUSY | WARN:
-                return "BUSY [WARN]";
+                return "busy";
             case FINALIZED:
-                return "FINALIZED [NO INIT]";
+                return "ABORTION";
             case FINALIZED | WARN:
-                return "FINALIZED [WARN, NO INIT]";
+                return "abortion";
             case INIT | FINALIZED:
                 return "FINALIZED";
             case INIT | FINALIZED | WARN:
-                return "FINALIZED [WARN]";
+                return "finalized";
             case ERROR:
-                return "ERROR [OPEN]";
+                return "ERROR-OPEN";
             case WARN | ERROR:
-                return "ERROR [OPEN, WARN]";
+                return "ERROR-open";
             case INIT | ERROR:
-                return "ERROR [INIT]";
+                return "ERROR-INIT";
             case INIT | WARN | ERROR:
-                return "ERROR [INIT, WARN]";
+                return "ERROR-init";
             case INIT | RUNNING | ERROR:
-                return "ERROR [RUNNING]";
+                return "ERROR-RUNNING";
             case INIT | RUNNING | WARN | ERROR:
-                return "ERROR [RUNNING, WARN]";
+                return "ERROR-running";
             case INIT | RUNNING | BUSY | ERROR:
-                return "ERROR [BUSY]";
+                return "ERROR-BUSY";
             case INIT | RUNNING | BUSY | WARN | ERROR:
-                return "ERROR [BUSY, WARN]";
+                return "ERROR-busy";
             case FINALIZED | ERROR:
-                return "ERROR [FINALIZED, NO INIT]";
+                return "ERROR-ABORTION";
             case FINALIZED | WARN | ERROR:
-                return "ERROR [FINALIZED, WARN, NO INIT]";
+                return "ERROR-abortion";
             case INIT | FINALIZED | ERROR:
-                return "ERROR [FINALIZED]";
+                return "ERROR-FINALIZED";
             case INIT | FINALIZED | WARN | ERROR:
-                return "ERROR [FINALIZED, WARN]";
+                return "ERROR-finalized";
             default:
                 LOGGER.error("No Such State [{}]", state);
                 return "NO SUCH STATE";
@@ -246,9 +246,9 @@ public class State implements Comparable<State> {
             case OPEN | INIT | RUNNING | BUSY | WARN:
                 return "b";
             case FINALIZED:
-                return "D";
+                return "A";
             case FINALIZED | WARN:
-                return "d";
+                return "a";
             case INIT | FINALIZED:
                 return "F";
             case INIT | FINALIZED | WARN:
@@ -270,9 +270,9 @@ public class State implements Comparable<State> {
             case INIT | RUNNING | BUSY | WARN | ERROR:
                 return "Eb";
             case FINALIZED | ERROR:
-                return "ED";
+                return "EA";
             case FINALIZED | WARN | ERROR:
-                return "Ed";
+                return "Ea";
             case INIT | FINALIZED | ERROR:
                 return "EF";
             case INIT | FINALIZED | WARN | ERROR:

@@ -21,7 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.springframework.context;
+package com.peknight.common.springframework.bean;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -30,6 +33,25 @@ package com.peknight.common.springframework.context;
  *
  * Created by PeKnight on 2017/8/10.
  */
-public interface SpringBeanFilter {
-    boolean beanNameFilter(String beanName);
+public class CommonSpringBeanFilter implements SpringBeanFilter {
+    public static final Set<String> IGNORE_BEAN_NAMES = new HashSet<>();
+
+    static {
+        IGNORE_BEAN_NAMES.add("objectNamingStrategy");
+        IGNORE_BEAN_NAMES.add("propertySourcesPlaceholderConfigurer");
+        IGNORE_BEAN_NAMES.add("mbean");
+    }
+
+    @Override
+    public boolean beanNameFilter(String beanName) {
+        if (beanName.indexOf(".") != -1) {
+            return false;
+        }
+        for (String ignoreBeanName : IGNORE_BEAN_NAMES) {
+            if (beanName.startsWith(ignoreBeanName)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

@@ -24,8 +24,8 @@
 package com.peknight.common.reflect.material;
 
 import com.peknight.common.springframework.context.ApplicationContextHolder;
-import com.peknight.common.springframework.context.CommonSpringBeanFilter;
-import com.peknight.common.springframework.context.SpringBeanFilter;
+import com.peknight.common.springframework.bean.CommonSpringBeanFilter;
+import com.peknight.common.springframework.bean.SpringBeanFilter;
 import com.peknight.common.validation.Assert;
 import org.springframework.context.ApplicationContext;
 

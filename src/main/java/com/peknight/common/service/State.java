@@ -26,13 +26,17 @@ package com.peknight.common.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntBinaryOperator;
+
 /**
- * 服务运行状态，分为 开启/未开启 初始化/未初始化 运行/未运行 繁忙/空闲 销毁/未销毁 异常/正常 六个状态
+ * 服务运行状态，分为 开启/未开启 初始化/未初始化 运行/未运行 繁忙/空闲 销毁/未销毁 警告/良好 异常/正常 七个状态
  * 其中异常/正常状态可以出现在服务运行的任意阶段，如果状态为异常，那么状态一定是被关闭（未开启）的
  * 只有服务处于开启状态且已初始化，才可能为运行状态
  * 只有服务处于运行状态，才可能为繁忙状态
  * 如果服务处于销毁状态，那么一定不会处于开启/运行/繁忙状态
  * 服务可以未初始化就被销毁
+ * 警告/良好 状态可以在任意状态下设置，不会影响其他状态
  *
  * @author PeKnight
  *
@@ -58,111 +62,187 @@ public class State implements Comparable<State> {
 
     public static final byte ERROR = 1 << 6;
 
-    protected byte state;
-
-    public State() {
-        this.state = NEW;
-    }
-
-    public byte getState() {
-        return state;
-    }
+    protected AtomicInteger state = new AtomicInteger(NEW);
 
     public boolean isOpen() {
-        return (state & OPEN) == OPEN;
+        return (state.get() & OPEN) == OPEN;
+    }
+
+    private static final IntBinaryOperator SET_OPEN_FUNCTION = (left, right) -> {
+        if ((left & (INIT | RUNNING | BUSY | FINALIZED | ERROR)) != 0) {
+            return left;
+        } else {
+            return right != 0 ? left | OPEN : (left | ERROR) & ~OPEN;
+        }
+    };
+
+    public boolean setOpen(boolean isOpen) {
+        int stateValue = state.accumulateAndGet(isOpen ? 1 : 0, SET_OPEN_FUNCTION);
+        if (isOpen) {
+            if ((stateValue & OPEN) == OPEN) {
+                return true;
+            } else {
+                LOGGER.warn("Can Not Open");
+                return false;
+            }
+        } else {
+            return (stateValue & OPEN) != OPEN;
+        }
     }
 
     public boolean isInit() {
-        return (state & ERROR) != ERROR && (state & INIT) == INIT;
+        int stateValue = state.get();
+        return (stateValue & ERROR) != ERROR && (stateValue & INIT) == INIT;
+    }
+
+    private static final IntBinaryOperator SET_INIT_FUNCTION = (left, right) -> {
+        if ((left & (RUNNING | BUSY | FINALIZED | ERROR)) != 0 ) {
+            return left;
+        } else {
+            return right != 0 ? left | (OPEN | INIT) : (left | (INIT | ERROR)) & ~OPEN;
+        }
+    };
+
+    public boolean setInit(boolean isInit) {
+        int stateValue = state.accumulateAndGet(isInit ? 1 : 0, SET_INIT_FUNCTION);
+        if (isInit) {
+            if ((stateValue & ERROR) != ERROR && (stateValue & INIT) == INIT) {
+                return true;
+            } else {
+                LOGGER.warn("Can Not Init");
+                return false;
+            }
+        } else {
+            return (stateValue & ERROR) == ERROR || (stateValue & INIT) != INIT;
+        }
     }
 
     public boolean isRunning() {
-        return (state & ERROR) != ERROR && (state & RUNNING) == RUNNING;
+        int stateValue = state.get();
+        return (stateValue & ERROR) != ERROR && (stateValue & RUNNING) == RUNNING;
+    }
+
+    private static final IntBinaryOperator SET_RUNNING_FUNCTION = (left, right) -> {
+        if ((left & (FINALIZED | ERROR)) != 0) {
+            return left;
+        } else {
+            return right != 0 ? left | (OPEN | INIT | RUNNING) : (left | (OPEN | INIT)) & (~RUNNING & ~BUSY);
+        }
+    };
+
+    public boolean setRunning(boolean isRunning) {
+        int stateValue = state.accumulateAndGet(isRunning ? 1 : 0, SET_RUNNING_FUNCTION);
+        if (isRunning) {
+            if ((stateValue & ERROR) != ERROR && (stateValue & RUNNING) == RUNNING) {
+                return true;
+            } else {
+                LOGGER.warn("Can Not Set Running");
+                return false;
+            }
+        } else {
+            return (stateValue & ERROR) == ERROR || (stateValue & RUNNING) != RUNNING;
+        }
     }
 
     public boolean isBusy() {
-        return (state & ERROR) != ERROR && (state & BUSY) == BUSY;
+        int stateValue = state.get();
+        return (stateValue & ERROR) != ERROR && (stateValue & BUSY) == BUSY;
+    }
+
+    private static final IntBinaryOperator SET_BUSY_FUNCTION = (left, right) -> {
+        if ((left & (FINALIZED | ERROR)) != 0) {
+            return left;
+        } else {
+            return right != 0 ? left | (OPEN | INIT | RUNNING | BUSY) : (left | (OPEN | INIT | RUNNING)) & ~BUSY;
+        }
+    };
+
+    public boolean setBusy(boolean isBusy) {
+        int stateValue = state.accumulateAndGet(isBusy ? 1 : 0, SET_BUSY_FUNCTION);
+        if (isBusy) {
+            if ((stateValue & ERROR) != ERROR && (stateValue & BUSY) == BUSY) {
+                return true;
+            } else {
+                LOGGER.warn("Can Not Set Busy");
+                return false;
+            }
+        } else {
+            return (stateValue & ERROR) == ERROR || (stateValue & BUSY) != BUSY;
+        }
     }
 
     public boolean isFinalized() {
-        return (state & ERROR) != ERROR && (state & FINALIZED) == FINALIZED;
+        int stateValue = state.get();
+        return (stateValue & ERROR) != ERROR && (stateValue & FINALIZED) == FINALIZED;
+    }
+
+    private static final IntBinaryOperator SET_FINALIZED_FUNCTION = (left, right) -> {
+        if ((left & OPEN) != OPEN) {
+            return left;
+        } else {
+            return right != 0 ? (left & (~OPEN & ~RUNNING & ~BUSY)) | FINALIZED : (left & ( ~OPEN & ~RUNNING & ~BUSY)) | (FINALIZED | ERROR);
+        }
+    };
+
+    public boolean setFinalized(boolean isFinalized) {
+        int stateValue = state.accumulateAndGet(isFinalized ? 1 : 0, SET_FINALIZED_FUNCTION);
+        if (isFinalized) {
+            if ((stateValue & ERROR) != ERROR && (stateValue & FINALIZED) == FINALIZED) {
+                return true;
+            } else {
+                LOGGER.warn("Not Opened");
+                return false;
+            }
+        } else {
+            return (stateValue & ERROR) == ERROR || (stateValue & FINALIZED) != FINALIZED;
+        }
     }
 
     public boolean isWarn() {
-        return (state & WARN) == WARN;
+        return (state.get() & WARN) == WARN;
+    }
+
+    private static final IntBinaryOperator SET_WARN_FUNCTION = (left, right) -> right != 0 ? left | WARN : left & ~WARN;
+
+    public boolean setWarn(boolean isWarn) {
+        int stateValue = state.accumulateAndGet(isWarn ? 1 : 0, SET_WARN_FUNCTION);
+        if (isWarn) {
+            if ((state.get() & WARN) == WARN) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return (state.get() & WARN) != WARN;
+        }
     }
 
     public boolean isError() {
-        return (state & ERROR) == ERROR;
+        return (state.get() & ERROR) == ERROR;
     }
 
-    public boolean setOpen(boolean isOpen) {
-        if ((state & (INIT | RUNNING | BUSY | FINALIZED | ERROR)) != 0) {
-            LOGGER.warn("Can Not Open");
-            return false;
-        } else {
-            state = (byte) (isOpen ? state | OPEN : state | ERROR);
-            return true;
-        }
-    }
-
-    public boolean setInit(boolean isInit) {
-        if ((state & (RUNNING | BUSY | FINALIZED | ERROR)) != 0 ) {
-            LOGGER.warn("Can Not Init");
-            return false;
-        } else {
-            state = (byte) (isInit ? state | OPEN | INIT : (state | INIT | ERROR) & ~OPEN);
-            return true;
-        }
-    }
-
-    public boolean setRunning(boolean isRunning) {
-        if ((state & (FINALIZED | ERROR)) != 0) {
-            LOGGER.warn("Can Not Set Running");
-            return false;
-        } else {
-            state = (byte) (isRunning ? state | OPEN | INIT | RUNNING : (state | OPEN | INIT) & ~RUNNING & ~BUSY);
-            return true;
-        }
-    }
-
-    public boolean setBusy(boolean isBusy) {
-        if ((state & (FINALIZED | ERROR)) != 0) {
-            LOGGER.warn("Can Not Set Busy");
-            return false;
-        } else {
-            state = (byte) (isBusy ? state | OPEN | INIT | RUNNING | BUSY : (state | OPEN | INIT | RUNNING) & ~BUSY);
-            return true;
-        }
-    }
-
-    public boolean setFinalized(boolean isFinalized) {
-        if ((state & OPEN) != OPEN) {
-            LOGGER.warn("Not Opened");
-            return false;
-        } else {
-            state = (byte) (isFinalized ? (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZED : (state & ~OPEN & ~RUNNING & ~BUSY) | FINALIZED | ERROR);
-            return true;
-        }
-    }
-
-    public boolean setWarn(boolean isWarn) {
-        state = (byte) (isWarn ? state | WARN : state & ~WARN);
-        return true;
-    }
+    private static final IntBinaryOperator SET_ERROR_FUNCTION = (left, right) -> right != 0 ? (left & ~OPEN) | ERROR : left & ~ERROR;
 
     public boolean setError(boolean isError) {
-        state = (byte) (isError ? (state & ~OPEN) | ERROR : state & ~ERROR);
-        return true;
+        int stateValue = state.accumulateAndGet(isError ? 1 : 0, SET_ERROR_FUNCTION);
+        if (isError) {
+            if ((state.get() & ERROR) == ERROR) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return (state.get() & ERROR) != ERROR;
+        }
     }
 
     public boolean refresh() {
-        state = NEW;
+        state.set(NEW);
         return true;
     }
 
     public String info() {
-        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
+        int basicState = state.get() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case NEW:
                 return "NEW";
@@ -223,7 +303,7 @@ public class State implements Comparable<State> {
     }
 
     public String simpleInfo() {
-        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
+        int basicState = state.get() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case NEW:
                 return "N";
@@ -284,7 +364,7 @@ public class State implements Comparable<State> {
     }
 
     public int priority() {
-        int basicState = state & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
+        int basicState = state.get() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case OPEN | INIT | RUNNING:
                 return 1 << 13;
@@ -351,7 +431,7 @@ public class State implements Comparable<State> {
 
         State oState = (State) o;
 
-        return state == oState.state;
+        return state.get() == oState.state.get();
     }
 
     @Override
@@ -365,7 +445,7 @@ public class State implements Comparable<State> {
 
     @Override
     public int hashCode() {
-        return (int) state;
+        return state.get();
     }
 
     @Override

@@ -38,6 +38,10 @@ import java.util.function.IntBinaryOperator;
  * 服务可以未初始化就被销毁
  * 警告/良好 状态可以在任意状态下设置，不会影响其他状态
  *
+ * 本类大量使用原子类型进行原子操作以保证线程安全。
+ *
+ * IntBinaryOperator类型对象中的left参数表示State的当前状态值、right参数实际上为一个boolean：0 - false, 1 - true;
+ *
  * @author PeKnight
  *
  * Created by PeKnight on 2017/8/11.
@@ -64,11 +68,21 @@ public class State implements Comparable<State> {
 
     protected AtomicInteger state = new AtomicInteger(NEW);
 
-    public boolean isOpen() {
-        return (state.get() & OPEN) == OPEN;
+    /**
+     * 同步真实状态
+     * 扩展本类时，可以重写此方法
+     *
+     * @return 最新的状态值
+     */
+    protected int syncState() {
+        return state.get();
     }
 
-    private static final IntBinaryOperator SET_OPEN_FUNCTION = (left, right) -> {
+    public boolean isOpen() {
+        return (syncState() & OPEN) == OPEN;
+    }
+
+    protected static final IntBinaryOperator SET_OPEN_FUNCTION = (left, right) -> {
         if ((left & (INIT | RUNNING | BUSY | FINALIZED | ERROR)) != 0) {
             return left;
         } else {
@@ -77,12 +91,13 @@ public class State implements Comparable<State> {
     };
 
     public boolean setOpen(boolean isOpen) {
+        syncState();
         int stateValue = state.accumulateAndGet(isOpen ? 1 : 0, SET_OPEN_FUNCTION);
         if (isOpen) {
             if ((stateValue & OPEN) == OPEN) {
                 return true;
             } else {
-                LOGGER.warn("Can Not Open");
+                LOGGER.warn("[{}] Can Not Open", info());
                 return false;
             }
         } else {
@@ -91,11 +106,11 @@ public class State implements Comparable<State> {
     }
 
     public boolean isInit() {
-        int stateValue = state.get();
+        int stateValue = syncState();
         return (stateValue & ERROR) != ERROR && (stateValue & INIT) == INIT;
     }
 
-    private static final IntBinaryOperator SET_INIT_FUNCTION = (left, right) -> {
+    protected static final IntBinaryOperator SET_INIT_FUNCTION = (left, right) -> {
         if ((left & (RUNNING | BUSY | FINALIZED | ERROR)) != 0 ) {
             return left;
         } else {
@@ -104,12 +119,13 @@ public class State implements Comparable<State> {
     };
 
     public boolean setInit(boolean isInit) {
+        syncState();
         int stateValue = state.accumulateAndGet(isInit ? 1 : 0, SET_INIT_FUNCTION);
         if (isInit) {
             if ((stateValue & ERROR) != ERROR && (stateValue & INIT) == INIT) {
                 return true;
             } else {
-                LOGGER.warn("Can Not Init");
+                LOGGER.warn("[{}] Can Not Init", info());
                 return false;
             }
         } else {
@@ -118,11 +134,11 @@ public class State implements Comparable<State> {
     }
 
     public boolean isRunning() {
-        int stateValue = state.get();
+        int stateValue = syncState();
         return (stateValue & ERROR) != ERROR && (stateValue & RUNNING) == RUNNING;
     }
 
-    private static final IntBinaryOperator SET_RUNNING_FUNCTION = (left, right) -> {
+    protected static final IntBinaryOperator SET_RUNNING_FUNCTION = (left, right) -> {
         if ((left & (FINALIZED | ERROR)) != 0) {
             return left;
         } else {
@@ -131,12 +147,13 @@ public class State implements Comparable<State> {
     };
 
     public boolean setRunning(boolean isRunning) {
+        syncState();
         int stateValue = state.accumulateAndGet(isRunning ? 1 : 0, SET_RUNNING_FUNCTION);
         if (isRunning) {
             if ((stateValue & ERROR) != ERROR && (stateValue & RUNNING) == RUNNING) {
                 return true;
             } else {
-                LOGGER.warn("Can Not Set Running");
+                LOGGER.warn("[{}] Can Not Set Running", info());
                 return false;
             }
         } else {
@@ -145,11 +162,11 @@ public class State implements Comparable<State> {
     }
 
     public boolean isBusy() {
-        int stateValue = state.get();
+        int stateValue = syncState();
         return (stateValue & ERROR) != ERROR && (stateValue & BUSY) == BUSY;
     }
 
-    private static final IntBinaryOperator SET_BUSY_FUNCTION = (left, right) -> {
+    protected static final IntBinaryOperator SET_BUSY_FUNCTION = (left, right) -> {
         if ((left & (FINALIZED | ERROR)) != 0) {
             return left;
         } else {
@@ -158,12 +175,13 @@ public class State implements Comparable<State> {
     };
 
     public boolean setBusy(boolean isBusy) {
+        syncState();
         int stateValue = state.accumulateAndGet(isBusy ? 1 : 0, SET_BUSY_FUNCTION);
         if (isBusy) {
             if ((stateValue & ERROR) != ERROR && (stateValue & BUSY) == BUSY) {
                 return true;
             } else {
-                LOGGER.warn("Can Not Set Busy");
+                LOGGER.warn("[{}] Can Not Set Busy", info());
                 return false;
             }
         } else {
@@ -172,11 +190,11 @@ public class State implements Comparable<State> {
     }
 
     public boolean isFinalized() {
-        int stateValue = state.get();
+        int stateValue = syncState();
         return (stateValue & ERROR) != ERROR && (stateValue & FINALIZED) == FINALIZED;
     }
 
-    private static final IntBinaryOperator SET_FINALIZED_FUNCTION = (left, right) -> {
+    protected static final IntBinaryOperator SET_FINALIZED_FUNCTION = (left, right) -> {
         if ((left & OPEN) != OPEN) {
             return left;
         } else {
@@ -185,12 +203,13 @@ public class State implements Comparable<State> {
     };
 
     public boolean setFinalized(boolean isFinalized) {
+        syncState();
         int stateValue = state.accumulateAndGet(isFinalized ? 1 : 0, SET_FINALIZED_FUNCTION);
         if (isFinalized) {
             if ((stateValue & ERROR) != ERROR && (stateValue & FINALIZED) == FINALIZED) {
                 return true;
             } else {
-                LOGGER.warn("Not Opened");
+                LOGGER.warn("[{}] Not Opened", info());
                 return false;
             }
         } else {
@@ -199,40 +218,42 @@ public class State implements Comparable<State> {
     }
 
     public boolean isWarn() {
-        return (state.get() & WARN) == WARN;
+        return (syncState() & WARN) == WARN;
     }
 
-    private static final IntBinaryOperator SET_WARN_FUNCTION = (left, right) -> right != 0 ? left | WARN : left & ~WARN;
+    protected static final IntBinaryOperator SET_WARN_FUNCTION = (left, right) -> right != 0 ? left | WARN : left & ~WARN;
 
     public boolean setWarn(boolean isWarn) {
+        syncState();
         int stateValue = state.accumulateAndGet(isWarn ? 1 : 0, SET_WARN_FUNCTION);
         if (isWarn) {
-            if ((state.get() & WARN) == WARN) {
+            if ((stateValue & WARN) == WARN) {
                 return true;
             } else {
                 return false;
             }
         } else {
-            return (state.get() & WARN) != WARN;
+            return (stateValue & WARN) != WARN;
         }
     }
 
     public boolean isError() {
-        return (state.get() & ERROR) == ERROR;
+        return (syncState() & ERROR) == ERROR;
     }
 
-    private static final IntBinaryOperator SET_ERROR_FUNCTION = (left, right) -> right != 0 ? (left & ~OPEN) | ERROR : left & ~ERROR;
+    protected static final IntBinaryOperator SET_ERROR_FUNCTION = (left, right) -> right != 0 ? (left & ~OPEN) | ERROR : left & ~ERROR;
 
     public boolean setError(boolean isError) {
+        syncState();
         int stateValue = state.accumulateAndGet(isError ? 1 : 0, SET_ERROR_FUNCTION);
         if (isError) {
-            if ((state.get() & ERROR) == ERROR) {
+            if ((stateValue & ERROR) == ERROR) {
                 return true;
             } else {
                 return false;
             }
         } else {
-            return (state.get() & ERROR) != ERROR;
+            return (stateValue & ERROR) != ERROR;
         }
     }
 
@@ -242,7 +263,7 @@ public class State implements Comparable<State> {
     }
 
     public String info() {
-        int basicState = state.get() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
+        int basicState = syncState() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case NEW:
                 return "NEW";
@@ -297,13 +318,13 @@ public class State implements Comparable<State> {
             case INIT | FINALIZED | WARN | ERROR:
                 return "ERROR-finalized";
             default:
-                LOGGER.error("No Such State [{}]", state);
+                LOGGER.error("No Such State [{}]", basicState);
                 return "NO SUCH STATE";
         }
     }
 
     public String simpleInfo() {
-        int basicState = state.get() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
+        int basicState = syncState() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case NEW:
                 return "N";
@@ -358,13 +379,13 @@ public class State implements Comparable<State> {
             case INIT | FINALIZED | WARN | ERROR:
                 return "Ef";
             default:
-                LOGGER.error("No Such State [{}]", state);
+                LOGGER.error("No Such State [{}]", basicState);
                 return "NSS";
         }
     }
 
     public int priority() {
-        int basicState = state.get() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
+        int basicState = syncState() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
         switch (basicState) {
             case OPEN | INIT | RUNNING:
                 return 1 << 13;
@@ -419,7 +440,7 @@ public class State implements Comparable<State> {
             case INIT | FINALIZED | WARN | ERROR:
                 return -1 << 10;
             default:
-                LOGGER.error("No Such State [{}]", state);
+                LOGGER.error("No Such State [{}]", basicState);
                 return -1 << 11;
         }
     }
@@ -431,7 +452,7 @@ public class State implements Comparable<State> {
 
         State oState = (State) o;
 
-        return state.get() == oState.state.get();
+        return syncState() == oState.syncState();
     }
 
     @Override
@@ -445,11 +466,12 @@ public class State implements Comparable<State> {
 
     @Override
     public int hashCode() {
-        return state.get();
+        return syncState();
     }
 
     @Override
     public String toString() {
+        syncState();
         return info();
     }
 }

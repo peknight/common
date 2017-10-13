@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.util;
+package com.peknight.common.util.function;
 
 /**
  *
@@ -30,6 +30,6 @@ package com.peknight.common.util;
  *
  * Created by PeKnight on 2017/10/12.
  */
-public interface Function {
-    void function() throws Exception;
+public interface Function<T, R> {
+    R apply(T t) throws Exception;
 }

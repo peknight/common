@@ -23,7 +23,7 @@
  */
 package com.peknight.common.concurrent;
 
-import com.peknight.common.util.Function;
+import com.peknight.common.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,18 +60,22 @@ public class BinaryExponentialBackoff {
         this.maximumRetryCount = maximumRetryCount;
     }
 
-    public boolean backoff(Function function, Class<? extends Exception> eClass) {
+    public <T, R> R backoff(Function<T, R> function, T param, Class<? extends Exception> eClass) {
         RetryParam retryParam = new RetryParam(requestTimeoutInMillis);
         while (true) {
             try {
-                function.function();
-                return true;
-            } catch (Throwable e) {
-                if (e.getClass().equals(eClass) && sleep(retryParam)) {
-                    continue;
+                return function.apply(param);
+            } catch (Throwable t) {
+                if (t.getClass().equals(eClass)) {
+                    if (sleep(retryParam)) {
+                        continue;
+                    } else {
+                        LOGGER.warn("Error: {}", t.toString(), t);
+                        return null;
+                    }
                 } else {
-                    LOGGER.warn("Unexpected Error {}", e.toString(), e);
-                    return false;
+                    LOGGER.warn("Unexpected Error {}", t.toString(), t);
+                    return null;
                 }
             }
         }
@@ -82,13 +86,13 @@ public class BinaryExponentialBackoff {
         try {
             if (retryParam.getRemainTimeInMillis() > 0) {
                 long sleepTimeInMillis = ((long) (random.nextDouble() *
-                        (1L << Math.min(retryParam.getRemainTimeInMillis(), maximumRetryCount)))) * beBackoffSlotInMillis;
+                        (1L << Math.min(retryParam.getRetryCount(), maximumRetryCount)))) * beBackoffSlotInMillis;
                 sleepTimeInMillis = Math.min(sleepTimeInMillis, retryParam.getRemainTimeInMillis());
                 TimeUnit.MILLISECONDS.sleep(sleepTimeInMillis);
                 retryParam.remainTimeDecrement(sleepTimeInMillis);
                 return true;
             } else {
-                LOGGER.warn("Task has been rejected " + retryParam.getRetryCount() + " times till timedout, reasom");
+                LOGGER.warn("Task has been rejected " + retryParam.getRetryCount() + " times till timeout");
                 return false;
             }
         } catch (InterruptedException e) {

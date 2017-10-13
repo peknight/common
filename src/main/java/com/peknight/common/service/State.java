@@ -66,7 +66,7 @@ public class State implements Comparable<State> {
 
     public static final byte ERROR = 1 << 6;
 
-    protected AtomicInteger state = new AtomicInteger(NEW);
+    protected final AtomicInteger state = new AtomicInteger(NEW);
 
     /**
      * 同步真实状态

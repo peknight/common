@@ -36,27 +36,10 @@ import java.net.Socket;
 public final class SocketUtils {
     private SocketUtils() {}
 
-    public static String socketInfo(int localPort, String remoteHost, int remotePort) {
-        return "LocalPort: " + localPort + ", RemoteHost: " + remoteHost + ", RemotePort: " + remotePort;
-    };
-
-    public static String socketInfo(Socket socket, String remoteHost, int remotePort) {
-        int localPort = -1;
-        if (socket != null) {
-            try {
-                localPort = socket.getLocalPort();
-            } catch (NullPointerException e) {}
-        }
-        return socketInfo(localPort, remoteHost, remotePort);
-    }
-
-    public static String socketInfo(Socket socket) {
-        int localPort = -1;
-        int remotePort = -1;
+    public static String getRemoteHost(Socket socket) {
         String remoteHost = "?";
         if (socket != null) {
             try {
-                remotePort = socket.getPort();
                 InetAddress remoteAddress = socket.getInetAddress();
                 if (remoteAddress != null) {
                     String temp = remoteAddress.toString();
@@ -64,9 +47,41 @@ public final class SocketUtils {
                         remoteHost = temp.substring(1);
                     }
                 }
+            } catch (NullPointerException e) {}
+        }
+        return remoteHost;
+    }
+
+    public static int getRemotePort(Socket socket) {
+        int remotePort = -1;
+        if (socket != null) {
+            try {
+                remotePort = socket.getPort();
+            } catch (NullPointerException e) {}
+        }
+        return remotePort;
+    }
+
+    public static int getLocalPort(Socket socket) {
+        int localPort = -1;
+        if (socket != null) {
+            try {
                 localPort = socket.getLocalPort();
             } catch (NullPointerException e) {}
         }
-        return socketInfo(localPort, remoteHost, remotePort);
+        return localPort;
+    }
+
+
+    public static String socketInfo(int localPort, String remoteHost, int remotePort) {
+        return "LocalPort: " + localPort + ", RemoteHost: " + remoteHost + ", RemotePort: " + remotePort;
+    };
+
+    public static String socketInfo(Socket socket, String remoteHost, int remotePort) {
+        return socketInfo(getLocalPort(socket), remoteHost, remotePort);
+    }
+
+    public static String socketInfo(Socket socket) {
+        return socketInfo(getLocalPort(socket), getRemoteHost(socket), getRemotePort(socket));
     }
 }

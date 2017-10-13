@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.peknight.common.date;
+package com.peknight.common.time;
 
 import java.text.DateFormat;
 import java.text.ParseException;

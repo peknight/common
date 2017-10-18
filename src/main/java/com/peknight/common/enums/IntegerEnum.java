@@ -7,6 +7,6 @@ package com.peknight.common.enums;
  *
  * Created by PeKnight on 2017/8/11.
  */
-public interface IntegerEnum<E extends Enum<E>> {
+public interface IntegerEnum {
     int getValue();
 }

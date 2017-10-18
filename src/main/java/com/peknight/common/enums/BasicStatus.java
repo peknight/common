@@ -30,7 +30,7 @@ package com.peknight.common.enums;
  *
  * Created by PeKnight on 2017/9/12.
  */
-public enum BasicStatus implements ByteEnum<BasicStatus> {
+public enum BasicStatus implements ByteEnum {
     Valid((byte) 0),
     Invalid((byte) 1);
 

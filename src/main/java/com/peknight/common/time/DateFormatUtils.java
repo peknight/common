@@ -23,9 +23,9 @@
  */
 package com.peknight.common.time;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,38 +42,45 @@ public final class DateFormatUtils {
 
     public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
-    private static final ThreadLocal<Map<String, DateFormat>> DATE_FORMAT_CONTEXT = new ThreadLocal<>();
+    public static final DateTimeFormatter DEFAULT_DATE_TIME_FORMATTER = DateTimeFormatter
+            .ofPattern(DEFAULT_DATE_FORMAT).withZone(ZoneId.systemDefault());
 
-    public static Map getDateFormatMap() {
-        if (DATE_FORMAT_CONTEXT.get() == null) {
-            DATE_FORMAT_CONTEXT.set(new ConcurrentHashMap<>());
-        }
-        return DATE_FORMAT_CONTEXT.get();
+    public static final Map<String, DateTimeFormatter> DATE_TIME_FORMATTER_MAP = new ConcurrentHashMap<>();
+
+    public static DateTimeFormatter ofPattern(String pattern) {
+        DATE_TIME_FORMATTER_MAP.putIfAbsent(pattern, DateTimeFormatter.ofPattern(pattern).withZone(ZoneId.systemDefault()));
+        return DATE_TIME_FORMATTER_MAP.get(pattern);
     }
 
-    public static DateFormat getDefaultDateFormat() {
-        return getDateFormat(DEFAULT_DATE_FORMAT);
-    }
-
-    public static DateFormat getDateFormat(String dateFormat) {
-        Map<String, DateFormat> dateFormatMap = getDateFormatMap();
-        dateFormatMap.putIfAbsent(dateFormat, new SimpleDateFormat(dateFormat));
-        return dateFormatMap.get(dateFormat);
+    public static String format() {
+        return DEFAULT_DATE_TIME_FORMATTER.format(Instant.now());
     }
 
     public static String format(Date date) {
-        return getDefaultDateFormat().format(date);
+        return format(date.getTime());
     }
 
-    public static String format(Date date, String dateFormat) {
-        return getDateFormat(dateFormat).format(date);
+    public static String format(long time) {
+        return DEFAULT_DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(time));
     }
 
-    public static Date parse(String dateStr) throws ParseException {
-        return getDefaultDateFormat().parse(dateStr);
+    public static String format(String pattern) {
+        return ofPattern(pattern).format(Instant.now());
     }
 
-    public static Date parse(String dateStr, String dateFormat) throws ParseException {
-        return getDateFormat(dateFormat).parse(dateStr);
+    public static String format(Date date, String pattern) {
+        return format(date.getTime(), pattern);
+    }
+
+    public static String format(long time, String pattern) {
+        return ofPattern(pattern).format(Instant.ofEpochMilli(time));
+    }
+
+    public static long parse(String dateStr) {
+        return DEFAULT_DATE_TIME_FORMATTER.parse(dateStr, Instant::from).getEpochSecond();
+    }
+
+    public static long parse(String dateStr, String pattern) {
+        return ofPattern(pattern).parse(dateStr, Instant::from).getEpochSecond();
     }
 }

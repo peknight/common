@@ -117,7 +117,7 @@ public class CommonLogAspect {
         }
         EXECUTE_TIME.computeIfAbsent(method, COMPUTE_FUNCTION);
         AtomicLongArray executeTime = EXECUTE_TIME.get(method);
-        long index = executeTime.incrementAndGet(1);
+        long index = executeTime.get(1) + 1;
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
@@ -131,19 +131,21 @@ public class CommonLogAspect {
         String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
         preLogger(logger, level, methodInfo, paramStringBuilder);
 
-        long start = System.currentTimeMillis();
+        long start = System.nanoTime();
         long taskTime;
 
         try {
             Object object = proceedingJoinPoint.proceed();
-            taskTime = System.currentTimeMillis() - start;
-            executeTime.addAndGet(0, taskTime);
-            postLogger(logger, level, methodInfo, taskTime, executeTime.get(0) / executeTime.get(1), method.getReturnType().getSimpleName(), object);
+            taskTime = System.nanoTime() - start;
+            postLogger(logger, level, methodInfo, timeFormat(taskTime),
+                    timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
+                    method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
-            taskTime = System.currentTimeMillis() - start;
-            executeTime.addAndGet(0, taskTime);
-            postErrorLogger(logger, methodInfo, taskTime, executeTime.get(0) / executeTime.get(1), method.getReturnType().getSimpleName(), e);
+            taskTime = System.nanoTime() - start;
+            postErrorLogger(logger, methodInfo, timeFormat(taskTime),
+                    timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
+                    method.getReturnType().getSimpleName(), e);
             throw e;
         }
     }
@@ -179,8 +181,10 @@ public class CommonLogAspect {
      * 打印方法执行后相应级别的日志
      */
     private static void postLogger(Logger logger, Level level, String methodInfo,
-                                   long time, long avgTime, String returnType, Object returnObj) {
-        String loggerFormat = "void".equals(returnType) ? "[  End] {} [Time: {}ms, AvgTime: {}ms]" : "[  End] {} [Time: {}ms, AvgTime: {}ms] Return: ({}) {}";
+                                   String time, String avgTime, String returnType, Object returnObj) {
+        String loggerFormat = "void".equals(returnType) ?
+                "[  End] {} [Time: {}, AvgTime: {}]" :
+                "[  End] {} [Time: {}, AvgTime: {}] Return: ({}) {}";
         switch (level) {
             case TRACE:
                 logger.trace(loggerFormat, methodInfo, time, avgTime, returnType, returnObj);
@@ -206,8 +210,10 @@ public class CommonLogAspect {
      * 打印异常日志
      */
     private static void postErrorLogger(Logger logger, String methodInfo,
-                                            long time, long avgTime, String returnType, Throwable e) {
-        String loggerFormat = "void".equals(returnType) ? "[Error] {} [Time: {}ms, AvgTime: {}ms] ExceptionMessage: {}" : "[Error] {} [Time: {}ms, AvgTime: {}ms] [ReturnType: {}] Error: {}";
+                                            String time, String avgTime, String returnType, Throwable e) {
+        String loggerFormat = "void".equals(returnType) ?
+                "[Error] {} [Time: {}, AvgTime: {}] ExceptionMessage: {}" :
+                "[Error] {} [Time: {}, AvgTime: {}] [ReturnType: {}] Error: {}";
         logger.error(loggerFormat, methodInfo, time, avgTime, returnType, e.toString(), e);
     }
 
@@ -228,6 +234,18 @@ public class CommonLogAspect {
                 return logger.isErrorEnabled();
             default:
                 return false;
+        }
+    }
+
+    private static String timeFormat(long nanoTime) {
+        if (nanoTime >= 10* 1000 * 1000 * 1000) {
+            return nanoTime / (1000 * 1000 * 1000) + "s";
+        } else if (nanoTime >= 10 * 1000 * 1000) {
+            return nanoTime / (1000 * 1000) + "ms";
+        } else if (nanoTime >= 10 * 1000) {
+            return nanoTime / 1000 + "us";
+        } else {
+            return nanoTime + "ns";
         }
     }
 }

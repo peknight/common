@@ -23,6 +23,7 @@
  */
 package com.peknight.common.service;
 
+import com.peknight.common.enums.IntegerEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -263,186 +264,15 @@ public class State implements Comparable<State> {
     }
 
     public String info() {
-        int basicState = syncState() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
-        switch (basicState) {
-            case NEW:
-                return "NEW";
-            case NEW | WARN:
-                return "new";
-            case OPEN:
-                return "OPEN";
-            case OPEN | WARN:
-                return "open";
-            case OPEN | INIT:
-                return "INIT";
-            case OPEN | INIT | WARN:
-                return "init";
-            case OPEN | INIT | RUNNING:
-                return "RUNNING";
-            case OPEN | INIT | RUNNING | WARN:
-                return "running";
-            case OPEN | INIT | RUNNING | BUSY:
-                return "BUSY";
-            case OPEN | INIT | RUNNING | BUSY | WARN:
-                return "busy";
-            case FINALIZED:
-                return "ABORTION";
-            case FINALIZED | WARN:
-                return "abortion";
-            case INIT | FINALIZED:
-                return "FINALIZED";
-            case INIT | FINALIZED | WARN:
-                return "finalized";
-            case ERROR:
-                return "ERROR-OPEN";
-            case WARN | ERROR:
-                return "ERROR-open";
-            case INIT | ERROR:
-                return "ERROR-INIT";
-            case INIT | WARN | ERROR:
-                return "ERROR-init";
-            case INIT | RUNNING | ERROR:
-                return "ERROR-RUNNING";
-            case INIT | RUNNING | WARN | ERROR:
-                return "ERROR-running";
-            case INIT | RUNNING | BUSY | ERROR:
-                return "ERROR-BUSY";
-            case INIT | RUNNING | BUSY | WARN | ERROR:
-                return "ERROR-busy";
-            case FINALIZED | ERROR:
-                return "ERROR-ABORTION";
-            case FINALIZED | WARN | ERROR:
-                return "ERROR-abortion";
-            case INIT | FINALIZED | ERROR:
-                return "ERROR-FINALIZED";
-            case INIT | FINALIZED | WARN | ERROR:
-                return "ERROR-finalized";
-            default:
-                LOGGER.error("No Such State [{}]", basicState);
-                return "NO SUCH STATE";
-        }
+        return StateEnum.findByValue(syncState()).getInfo();
     }
 
     public String simpleInfo() {
-        int basicState = syncState() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
-        switch (basicState) {
-            case NEW:
-                return "N";
-            case NEW | WARN:
-                return "n";
-            case OPEN:
-                return "O";
-            case OPEN | WARN:
-                return "o";
-            case OPEN | INIT:
-                return "I";
-            case OPEN | INIT | WARN:
-                return "i";
-            case OPEN | INIT | RUNNING:
-                return "R";
-            case OPEN | INIT | RUNNING | WARN:
-                return "r";
-            case OPEN | INIT | RUNNING | BUSY:
-                return "B";
-            case OPEN | INIT | RUNNING | BUSY | WARN:
-                return "b";
-            case FINALIZED:
-                return "A";
-            case FINALIZED | WARN:
-                return "a";
-            case INIT | FINALIZED:
-                return "F";
-            case INIT | FINALIZED | WARN:
-                return "f";
-            case ERROR:
-                return "EO";
-            case WARN | ERROR:
-                return "Eo";
-            case INIT | ERROR:
-                return "EI";
-            case INIT | WARN | ERROR:
-                return "Ei";
-            case INIT | RUNNING | ERROR:
-                return "ER";
-            case INIT | RUNNING | WARN | ERROR:
-                return "Er";
-            case INIT | RUNNING | BUSY | ERROR:
-                return "EB";
-            case INIT | RUNNING | BUSY | WARN | ERROR:
-                return "Eb";
-            case FINALIZED | ERROR:
-                return "EA";
-            case FINALIZED | WARN | ERROR:
-                return "Ea";
-            case INIT | FINALIZED | ERROR:
-                return "EF";
-            case INIT | FINALIZED | WARN | ERROR:
-                return "Ef";
-            default:
-                LOGGER.error("No Such State [{}]", basicState);
-                return "NSS";
-        }
+        return StateEnum.findByValue(syncState()).getSimpleInfo();
     }
 
     public int priority() {
-        int basicState = syncState() & (OPEN | INIT | RUNNING | BUSY | FINALIZED | WARN | ERROR);
-        switch (basicState) {
-            case OPEN | INIT | RUNNING:
-                return 1 << 13;
-            case OPEN | INIT | RUNNING | WARN:
-                return 1 << 12;
-            case OPEN | INIT | RUNNING | BUSY:
-                return 1 << 11;
-            case OPEN | INIT | RUNNING | BUSY | WARN:
-                return 1 << 10;
-            case OPEN | INIT:
-                return 1 << 9;
-            case OPEN | INIT | WARN:
-                return 1 << 8;
-            case OPEN:
-                return 1 << 7;
-            case OPEN | WARN:
-                return 1 << 6;
-            case NEW:
-                return 1 << 5;
-            case NEW | WARN:
-                return 1 << 4;
-            case INIT | FINALIZED:
-                return 1 << 3;
-            case INIT | FINALIZED | WARN:
-                return 1 << 2;
-            case FINALIZED:
-                return 1 << 1;
-            case FINALIZED | WARN:
-                return 1 << 0;
-            case ERROR:
-                return 0;
-            case WARN | ERROR:
-                return -1 << 0;
-            case INIT | ERROR:
-                return -1 << 1;
-            case INIT | WARN | ERROR:
-                return -1 << 2;
-            case INIT | RUNNING | ERROR:
-                return -1 << 3;
-            case INIT | RUNNING | WARN | ERROR:
-                return -1 << 4;
-            case INIT | RUNNING | BUSY | ERROR:
-                return -1 << 5;
-            case INIT | RUNNING | BUSY | WARN | ERROR:
-                return -1 << 6;
-            case FINALIZED | ERROR:
-                return -1 << 7;
-            case FINALIZED | WARN | ERROR:
-                return -1 << 8;
-            case INIT | FINALIZED | ERROR:
-                return -1 << 9;
-            case INIT | FINALIZED | WARN | ERROR:
-                return -1 << 10;
-            default:
-                LOGGER.error("No Such State [{}]", basicState);
-                return -1 << 11;
-        }
+        return StateEnum.findByValue(syncState()).getPriority();
     }
 
     @Override
@@ -471,7 +301,132 @@ public class State implements Comparable<State> {
 
     @Override
     public String toString() {
-        syncState();
         return info();
+    }
+
+    private enum StateEnum implements IntegerEnum {
+        NEW(State.NEW, 1 << 5, "NEW", "N"),
+        NEW_WARN(State.NEW | State.WARN, 1 << 4, "new", "n"),
+        OPEN(State.OPEN, 1 << 7, "OPEN", "O"),
+        OPEN_WARN(State.OPEN | State.WARN, 1 << 6, "open", "o"),
+        INIT(State.OPEN | State.INIT, 1 << 9, "INIT", "I"),
+        INIT_WARN(State.OPEN | State.INIT | State.WARN, 1 << 8, "init", "i"),
+        RUNNING(State.OPEN | State.INIT | State.RUNNING, 1 << 13, "RUNNING", "R"),
+        RUNNING_WARN(State.OPEN | State.INIT | State.RUNNING | State.WARN, 1 << 12, "running", "r"),
+        BUSY(State.OPEN | State.INIT | State.RUNNING | State.BUSY, 1 << 11, "BUSY", "B"),
+        BUSY_WARN(State.OPEN | State.INIT | State.RUNNING | State.BUSY | State.WARN, 1 << 10, "busy", "b"),
+        ABORTION(State.FINALIZED, 1 << 1, "ABORTION", "A"),
+        ABORTION_WARN(State.FINALIZED | State.WARN, 1 << 0, "abortion", "a"),
+        FINALIZED(State.INIT | State.FINALIZED, 1 << 3, "FINALIZED", "F"),
+        FINALIZED_WARN(State.INIT | State.FINALIZED | State.WARN, 1 << 2, "finalized", "f"),
+        ERROR_OPEN(State.ERROR, 0, "ERROR-OPEN", "EO"),
+        ERROR_OPEN_WARN(State.WARN | State.ERROR, -1 << 0, "ERROR-open", "Eo"),
+        ERROR_INIT(State.INIT | State.ERROR, -1 << 1, "ERROR-INIT", "EI"),
+        ERROR_INIT_WARN(State.INIT | State.WARN | State.ERROR, -1 << 2, "ERROR-init", "Ei"),
+        ERROR_RUNNING(State.INIT | State.RUNNING | State.ERROR, -1 << 3, "ERROR-RUNNING", "ER"),
+        ERROR_RUNNING_WARN(State.INIT | State.RUNNING | State.WARN | State.ERROR, -1 << 4, "ERROR-running", "Er"),
+        ERROR_BUSY(State.INIT | State.RUNNING | State.BUSY | State.ERROR, -1 << 5, "ERROR-BUSY", "EB"),
+        ERROR_BUSY_WARN(State.INIT | State.RUNNING | State.BUSY | State.WARN | State.ERROR, -1 << 6, "ERROR-busy", "Eb"),
+        ERROR_ABORTION(State.FINALIZED | State.ERROR, -1 << 7, "ERROR-ABORTION", "EA"),
+        ERROR_ABORTION_WARN(State.FINALIZED | State.WARN | State.ERROR, -1 << 8, "ERROR-abortion", "Ea"),
+        ERROR_FINALIZED(State.INIT | State.FINALIZED | State.ERROR, -1 << 9, "ERROR-FINALIZED", "EF"),
+        ERROR_FINALIZED_WARN(State.INIT | State.FINALIZED | State.WARN | State.ERROR, -1 << 10, "ERROR-finalized", "Ef"),
+        NO_SUCH_STATE(State.OPEN | State.INIT | State.RUNNING | State.BUSY | State.FINALIZED | State.WARN | State.ERROR,
+                -1 << 11, "No Such State", "NSS");
+
+        private final int state;
+        private final int priority;
+        private final String info;
+        private final String simpleInfo;
+
+        StateEnum(int state, int priority, String info, String simpleInfo) {
+            this.state = state;
+            this.priority = priority;
+            this.info = info;
+            this.simpleInfo = simpleInfo;
+        }
+
+        @Override
+        public int getValue() {
+            return state;
+        }
+
+        public int getState() {
+            return state;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public String getInfo() {
+            return info;
+        }
+
+        public String getSimpleInfo() {
+            return simpleInfo;
+        }
+
+        public static StateEnum findByValue(int state) {
+            int basicState = state &
+                    (State.OPEN | State.INIT | State.RUNNING | State.BUSY | State.FINALIZED | State.WARN | State.ERROR);
+            switch (basicState) {
+                case State.NEW:
+                    return NEW;
+                case State.NEW | State.WARN:
+                    return NEW_WARN;
+                case State.OPEN:
+                    return OPEN;
+                case State.OPEN | State.WARN:
+                    return OPEN_WARN;
+                case State.OPEN | State.INIT:
+                    return INIT;
+                case State.OPEN | State.INIT | State.WARN:
+                    return INIT_WARN;
+                case State.OPEN | State.INIT | State.RUNNING:
+                    return RUNNING;
+                case State.OPEN | State.INIT | State.RUNNING | State.WARN:
+                    return RUNNING_WARN;
+                case State.OPEN | State.INIT | State.RUNNING | State.BUSY:
+                    return BUSY;
+                case State.OPEN | State.INIT | State.RUNNING | State.BUSY | State.WARN:
+                    return BUSY_WARN;
+                case State.FINALIZED:
+                    return ABORTION;
+                case State.FINALIZED | State.WARN:
+                    return ABORTION_WARN;
+                case State.INIT | State.FINALIZED:
+                    return FINALIZED;
+                case State.INIT | State.FINALIZED | State.WARN:
+                    return FINALIZED_WARN;
+                case State.ERROR:
+                    return ERROR_OPEN;
+                case State.WARN | State.ERROR:
+                    return ERROR_OPEN_WARN;
+                case State.INIT | State.ERROR:
+                    return ERROR_INIT;
+                case State.INIT | State.WARN | State.ERROR:
+                    return ERROR_INIT_WARN;
+                case State.INIT | State.RUNNING | State.ERROR:
+                    return ERROR_RUNNING;
+                case State.INIT | State.RUNNING | State.WARN | State.ERROR:
+                    return ERROR_RUNNING_WARN;
+                case State.INIT | State.RUNNING | State.BUSY | State.ERROR:
+                    return ERROR_BUSY;
+                case State.INIT | State.RUNNING | State.BUSY | State.WARN | State.ERROR:
+                    return ERROR_BUSY_WARN;
+                case State.FINALIZED | State.ERROR:
+                    return ERROR_ABORTION;
+                case State.FINALIZED | State.WARN | State.ERROR:
+                    return ERROR_ABORTION_WARN;
+                case State.INIT | State.FINALIZED | State.ERROR:
+                    return ERROR_FINALIZED;
+                case State.INIT | State.FINALIZED | State.WARN | State.ERROR:
+                    return ERROR_FINALIZED_WARN;
+                default:
+                    LOGGER.error("No Such State [{}]", basicState);
+                    return NO_SUCH_STATE;
+            }
+        }
     }
 }

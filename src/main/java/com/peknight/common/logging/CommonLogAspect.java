@@ -121,7 +121,8 @@ public class CommonLogAspect {
         }
         EXECUTE_TIME.computeIfAbsent(method, COMPUTE_FUNCTION);
         AtomicLongArray executeTime = EXECUTE_TIME.get(method);
-        long index = executeTime.get(1) + 1;
+        long index = executeTime.getAndIncrement(1) + 1;
+        long totalTime = executeTime.get(0);
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
@@ -141,14 +142,16 @@ public class CommonLogAspect {
         try {
             Object object = proceedingJoinPoint.proceed();
             taskTime = System.nanoTime() - start;
+            executeTime.addAndGet(0, taskTime);
             postLogger(logger, level, methodInfo, timeFormat(taskTime),
-                    timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
+                    timeFormat((totalTime + taskTime) / index),
                     method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
             taskTime = System.nanoTime() - start;
+            executeTime.addAndGet(0, taskTime);
             postErrorLogger(logger, methodInfo, timeFormat(taskTime),
-                    timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
+                    timeFormat((totalTime + taskTime) / index),
                     method.getReturnType().getSimpleName(), e);
             throw e;
         }
@@ -242,7 +245,7 @@ public class CommonLogAspect {
     }
 
     private static String timeFormat(long nanoTime) {
-        if (nanoTime >= 10* 1000 * 1000 * 1000) {
+        if (nanoTime >= 10L * 1000 * 1000 * 1000) {
             return nanoTime / (1000 * 1000 * 1000) + "s";
         } else if (nanoTime >= 10 * 1000 * 1000) {
             return nanoTime / (1000 * 1000) + "ms";

@@ -98,7 +98,7 @@ public class State implements Comparable<State> {
             if ((stateValue & OPEN) == OPEN) {
                 return true;
             } else {
-                LOGGER.warn("[{}] Can Not Open", info());
+                LOGGER.warn("Can not open when {}", info());
                 return false;
             }
         } else {
@@ -126,7 +126,7 @@ public class State implements Comparable<State> {
             if ((stateValue & ERROR) != ERROR && (stateValue & INIT) == INIT) {
                 return true;
             } else {
-                LOGGER.warn("[{}] Can Not Init", info());
+                LOGGER.warn("Can not init when {}", info());
                 return false;
             }
         } else {
@@ -154,7 +154,7 @@ public class State implements Comparable<State> {
             if ((stateValue & ERROR) != ERROR && (stateValue & RUNNING) == RUNNING) {
                 return true;
             } else {
-                LOGGER.warn("[{}] Can Not Set Running", info());
+                LOGGER.warn("Can not set running when {}", info());
                 return false;
             }
         } else {
@@ -182,7 +182,7 @@ public class State implements Comparable<State> {
             if ((stateValue & ERROR) != ERROR && (stateValue & BUSY) == BUSY) {
                 return true;
             } else {
-                LOGGER.warn("[{}] Can Not Set Busy", info());
+                LOGGER.warn("Can not set busy when {}", info());
                 return false;
             }
         } else {
@@ -210,7 +210,7 @@ public class State implements Comparable<State> {
             if ((stateValue & ERROR) != ERROR && (stateValue & FINALIZED) == FINALIZED) {
                 return true;
             } else {
-                LOGGER.warn("[{}] Not Opened", info());
+                LOGGER.warn("Can not set finalize when {}", info());
                 return false;
             }
         } else {

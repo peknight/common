@@ -52,6 +52,7 @@ import java.util.function.Function;
 @Order(0)
 @Aspect
 public class CommonLogAspect {
+
     /**
      * 为每个方法执行计数计时的Map，使用ConcurrentHashMap保证线程安全
      * Key为Method对应计数计时的方法，AtomicLongArray为一个长度为2的long型原子数组（保证线程安全）
@@ -70,16 +71,19 @@ public class CommonLogAspect {
     @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
+        Class<?> declaringClass = method.getDeclaringClass();
+        // 获取Method的类的Logger
+        Logger logger = LoggerFactory.getLogger(declaringClass);
         // 获取方法上的CommonLog注解，如果没有则获取类上的CommonLog注解
-        CommonLog commonLog;
+        CommonLog commonLog = null;
         if (method.isAnnotationPresent(CommonLog.class)) {
             commonLog = method.getDeclaredAnnotation(CommonLog.class);
-        } else {
-            commonLog = method.getDeclaringClass().getDeclaredAnnotation(CommonLog.class);
+        } else if (declaringClass.isAnnotationPresent(CommonLog.class)) {
+            Class<?> targetClass = declaringClass;
+            while ((commonLog = targetClass.getDeclaredAnnotation(CommonLog.class)) == null) {
+                targetClass = targetClass.getSuperclass();
+            }
         }
-
-        // 获取Method的类的Logger
-        Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
 
         // 获取被拦截方法的日志等级
         Level level = commonLog.value();

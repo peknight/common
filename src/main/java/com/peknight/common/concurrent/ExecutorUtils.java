@@ -23,8 +23,15 @@
  */
 package com.peknight.common.concurrent;
 
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -36,18 +43,58 @@ import java.util.concurrent.TimeUnit;
  * Created by PeKnight on 2017/10/12.
  */
 public final class ExecutorUtils {
+
+    private static final ThreadFactory DEFAULT_THREAD_FACTORY = new CustomizableThreadFactory();
+
+    private static final RejectedExecutionHandler DEFAULT_REJECT_HANDLER = new ThreadPoolExecutor.CallerRunsPolicy();
+
     private ExecutorUtils() {}
 
-    public static ExecutorService createDefaultExecutorService(int corePoolSize, int maximumPoolSize, long keepAliveTime) {
+    public static ExecutorService createExecutorService(int corePoolSize, int maximumPoolSize, long keepAliveTime) {
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<>(), new CustomizableThreadFactory());
+                new SynchronousQueue<>(), DEFAULT_THREAD_FACTORY, DEFAULT_REJECT_HANDLER);
     }
 
-    public static ExecutorService createDefaultExecutorService(String poolName, int corePoolSize, int maximumPoolSize, long keepAliveTime) {
+    public static ExecutorService createExecutorService(String poolName, int corePoolSize, int maximumPoolSize, long keepAliveTime) {
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<>(), new CustomizableThreadFactory(poolName));
+                new SynchronousQueue<>(), new CustomizableThreadFactory(poolName), DEFAULT_REJECT_HANDLER);
     }
 
+    public static TaskExecutor createTaskExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime) {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(corePoolSize);
+        taskExecutor.setMaxPoolSize(maximumPoolSize);
+        taskExecutor.setKeepAliveSeconds((int) (keepAliveTime / 1000));
+        taskExecutor.setQueueCapacity(0);
+        taskExecutor.setThreadFactory(DEFAULT_THREAD_FACTORY);
+        taskExecutor.setRejectedExecutionHandler(DEFAULT_REJECT_HANDLER);
+        return taskExecutor;
+    }
 
+    public static TaskExecutor createTaskExecutor(String poolName, int corePoolSize, int maximumPoolSize, long keepAliveTime) {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(corePoolSize);
+        taskExecutor.setMaxPoolSize(maximumPoolSize);
+        taskExecutor.setKeepAliveSeconds((int) (keepAliveTime / 1000));
+        taskExecutor.setQueueCapacity(0);
+        taskExecutor.setThreadFactory(new CustomizableThreadFactory(poolName));
+        taskExecutor.setRejectedExecutionHandler(DEFAULT_REJECT_HANDLER);
+        return taskExecutor;
+    }
 
+    public static TaskScheduler createTaskScheduler(int poolSize) {
+        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(poolSize);
+        taskScheduler.setThreadFactory(DEFAULT_THREAD_FACTORY);
+        taskScheduler.setRejectedExecutionHandler(DEFAULT_REJECT_HANDLER);
+        return taskScheduler;
+    }
+
+    public static TaskScheduler createTaskScheduler(String poolName, int poolSize) {
+        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(poolSize);
+        taskScheduler.setThreadFactory(new CustomizableThreadFactory(poolName));
+        taskScheduler.setRejectedExecutionHandler(DEFAULT_REJECT_HANDLER);
+        return taskScheduler;
+    }
 }

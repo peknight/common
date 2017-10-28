@@ -36,7 +36,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.function.Function;
 
 /**
  * 日志切面，通过拦截@CommonLog注解，打印被拦截方法的信息
@@ -59,11 +58,6 @@ public class CommonLogAspect {
      * 数据第一个元素表示此方法执行的总时间，第二个元素表示此方法执行的总次数，相除即为平均执行时间
      */
     private static final Map<Method, AtomicLongArray> EXECUTE_TIME = new ConcurrentHashMap<>();
-
-    /**
-     * 如果EXECUTE_TIME中不含有某个Method Key，那么以此Method为Key，新创建的长度为2的long型原子数组为Value放入EXECUTE_TIME中
-     */
-    private static final Function<Method, AtomicLongArray> COMPUTE_FUNCTION= method -> new AtomicLongArray(2);
 
     /**
      * 拦截类上或方法注解@CommonLog的所有方法
@@ -119,7 +113,7 @@ public class CommonLogAspect {
                 parameterNames[i] = "arg" + i;
             }
         }
-        EXECUTE_TIME.computeIfAbsent(method, COMPUTE_FUNCTION);
+        EXECUTE_TIME.putIfAbsent(method, new AtomicLongArray(2));
         AtomicLongArray executeTime = EXECUTE_TIME.get(method);
         long index = executeTime.getAndIncrement(1) + 1;
         long totalTime = executeTime.get(0);

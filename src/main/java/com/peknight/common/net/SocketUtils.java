@@ -74,8 +74,8 @@ public final class SocketUtils {
 
 
     public static String socketInfo(int localPort, String remoteHost, int remotePort) {
-        return "LocalPort: " + localPort + ", RemoteHost: " + remoteHost + ", RemotePort: " + remotePort;
-    };
+        return localPort + " <=> " + remoteHost + ":" + remotePort;
+    }
 
     public static String socketInfo(Socket socket, String remoteHost, int remotePort) {
         return socketInfo(getLocalPort(socket), remoteHost, remotePort);

@@ -56,6 +56,7 @@ public class CommonLogAspect {
      * 为每个方法执行计数计时的Map，使用ConcurrentHashMap保证线程安全
      * Key为Method对应计数计时的方法，AtomicLongArray为一个长度为2的long型原子数组（保证线程安全）
      * 数据第一个元素表示此方法执行的总时间，第二个元素表示此方法执行的总次数，相除即为平均执行时间
+     * 第三个元素用于记录当前是第几次执行（不同于第二个元素，第二个元素用于计算平均时间直接使用会有计算不准确的问题）
      */
     private static final Map<Method, AtomicLongArray> EXECUTE_TIME = new ConcurrentHashMap<>();
 
@@ -113,10 +114,9 @@ public class CommonLogAspect {
                 parameterNames[i] = "arg" + i;
             }
         }
-        EXECUTE_TIME.putIfAbsent(method, new AtomicLongArray(2));
+        EXECUTE_TIME.putIfAbsent(method, new AtomicLongArray(3));
         AtomicLongArray executeTime = EXECUTE_TIME.get(method);
-        long index = executeTime.getAndIncrement(1) + 1;
-        long totalTime = executeTime.get(0);
+        long index = executeTime.incrementAndGet(2);
         StringBuilder paramStringBuilder = new StringBuilder("");
         for (int i = 0; i < args.length; i++) {
             if (args[i] != null) {
@@ -136,16 +136,14 @@ public class CommonLogAspect {
         try {
             Object object = proceedingJoinPoint.proceed();
             taskTime = System.nanoTime() - start;
-            executeTime.addAndGet(0, taskTime);
             postLogger(logger, level, methodInfo, timeFormat(taskTime),
-                    timeFormat((totalTime + taskTime) / index),
+                    timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
                     method.getReturnType().getSimpleName(), object);
             return object;
         } catch (Throwable e) {
             taskTime = System.nanoTime() - start;
-            executeTime.addAndGet(0, taskTime);
             postErrorLogger(logger, methodInfo, timeFormat(taskTime),
-                    timeFormat((totalTime + taskTime) / index),
+                    timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
                     method.getReturnType().getSimpleName(), e);
             throw e;
         }

@@ -28,9 +28,8 @@ package com.peknight.common.function;
  *
  * @author PeKnight
  *
- * Created by PeKnight on 2017/11/1.
+ * Created by PeKnight on 2017/10/12.
  */
-public interface Function<T, R> extends java.util.function.Function<T, R> {
-    @Override
-    R apply(T t);
+public interface ErrorFunction<T, R> {
+    R apply(T t) throws Exception;
 }

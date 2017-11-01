@@ -23,6 +23,8 @@
  */
 package com.peknight.common.concurrent;
 
+import com.peknight.common.function.BoolFunction;
+import com.peknight.common.function.ErrorFunction;
 import com.peknight.common.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +62,7 @@ public class BinaryExponentialBackoff {
         this.maximumRetryCount = maximumRetryCount;
     }
 
-    public <T, R> R backoff(Function<T, R> function, T param, Class<? extends Exception> eClass) {
+    public <T, R> R backoffError(ErrorFunction<T, R> function, T param, Class<? extends Exception> eClass) {
         RetryParam retryParam = new RetryParam(requestTimeoutInMillis);
         while (true) {
             try {
@@ -76,6 +78,38 @@ public class BinaryExponentialBackoff {
                 } else {
                     LOGGER.warn("Unexpected Error {}", t.toString(), t);
                     return null;
+                }
+            }
+        }
+    }
+
+    public <T, R> R backoffNull(Function<T, R> function, T param) {
+        RetryParam retryParam = new RetryParam(requestTimeoutInMillis);
+        R returnValue;
+        while (true) {
+            returnValue = function.apply(param);
+            if (returnValue == null) {
+                if (sleep(retryParam)) {
+                    continue;
+                } else {
+                    return null;
+                }
+            } else {
+                return returnValue;
+            }
+        }
+    }
+
+    public <T> boolean backoffFalse(BoolFunction<T> function, T param) {
+        RetryParam retryParam = new RetryParam(requestTimeoutInMillis);
+        while (true) {
+            if (function.apply(param)) {
+                return true;
+            } else {
+                if (sleep(retryParam)) {
+                    continue;
+                } else {
+                    return false;
                 }
             }
         }

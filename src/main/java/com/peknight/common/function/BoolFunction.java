@@ -30,7 +30,7 @@ package com.peknight.common.function;
  *
  * Created by PeKnight on 2017/11/1.
  */
-public interface Function<T, R> extends java.util.function.Function<T, R> {
+public interface BoolFunction<T> extends java.util.function.Function<T, Boolean> {
     @Override
-    R apply(T t);
+    Boolean apply(T t);
 }

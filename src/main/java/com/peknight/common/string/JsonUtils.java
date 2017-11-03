@@ -26,9 +26,13 @@ package com.peknight.common.string;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  *
@@ -38,6 +42,9 @@ import java.io.IOException;
  * Created by PeKnight on 2017/7/31.
  */
 public final class JsonUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonUtils.class);
+
     private static final ObjectMapper OBJECT_MAPPER;
 
     private JsonUtils() {}
@@ -52,7 +59,20 @@ public final class JsonUtils {
         return OBJECT_MAPPER.writeValueAsString(value);
     }
 
+    public static String writeMap(Map map) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Error occurred during processing json: {}", map);
+            return map.toString();
+        }
+    }
+
     public static <T> T read(String json, Class<T> tClass) throws IOException {
         return OBJECT_MAPPER.readValue(json, tClass);
+    }
+
+    public static JsonNode readJson(String json) throws IOException {
+        return OBJECT_MAPPER.readTree(json);
     }
 }

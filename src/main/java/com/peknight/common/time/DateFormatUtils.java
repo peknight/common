@@ -24,8 +24,11 @@
 package com.peknight.common.time;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,6 +84,18 @@ public final class DateFormatUtils {
     }
 
     public static long parse(String dateStr, String pattern) {
+        try {
+            return parseTime(dateStr, pattern);
+        } catch (DateTimeParseException e) {
+            return parseDate(dateStr, pattern);
+        }
+    }
+
+    public static long parseTime(String dateStr, String pattern) {
         return ofPattern(pattern).parse(dateStr, Instant::from).getEpochSecond();
+    }
+
+    public static long parseDate(String dateStr, String pattern) {
+        return ofPattern(pattern).parse(dateStr, LocalDate::from).atStartOfDay().toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 }

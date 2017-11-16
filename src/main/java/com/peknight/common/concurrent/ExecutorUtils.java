@@ -28,7 +28,9 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -50,33 +52,46 @@ public final class ExecutorUtils {
 
     private ExecutorUtils() {}
 
-    public static ExecutorService createExecutorService(int corePoolSize, int maximumPoolSize, long keepAliveTime) {
-        return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<>(), DEFAULT_THREAD_FACTORY, DEFAULT_REJECT_HANDLER);
+    public static BlockingQueue<Runnable> createQueue(int queueCapacity) {
+        if (queueCapacity > 0) {
+            return new LinkedBlockingQueue<>(queueCapacity);
+        }
+        else {
+            return new SynchronousQueue<>();
+        }
     }
 
-    public static ExecutorService createExecutorService(String poolName, int corePoolSize, int maximumPoolSize, long keepAliveTime) {
+    public static ExecutorService createExecutorService(int corePoolSize, int maximumPoolSize, long keepAliveTime,
+                                                        int queueCapacity) {
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.MILLISECONDS,
-                new SynchronousQueue<>(), new CustomizableThreadFactory(poolName), DEFAULT_REJECT_HANDLER);
+                createQueue(queueCapacity), new CustomizableThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
-    public static TaskExecutor createTaskExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime) {
+    public static ExecutorService createExecutorService(String poolName, int corePoolSize, int maximumPoolSize,
+                                                        long keepAliveTime, int queueCapacity) {
+        return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.MILLISECONDS,
+                createQueue(queueCapacity), new CustomizableThreadFactory(poolName), new ThreadPoolExecutor.CallerRunsPolicy());
+    }
+
+    public static TaskExecutor createTaskExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime,
+                                                  int queueCapacity) {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setCorePoolSize(corePoolSize);
         taskExecutor.setMaxPoolSize(maximumPoolSize);
         taskExecutor.setKeepAliveSeconds((int) (keepAliveTime / 1000));
-        taskExecutor.setQueueCapacity(0);
+        taskExecutor.setQueueCapacity(queueCapacity);
         taskExecutor.setThreadFactory(DEFAULT_THREAD_FACTORY);
         taskExecutor.setRejectedExecutionHandler(DEFAULT_REJECT_HANDLER);
         return taskExecutor;
     }
 
-    public static TaskExecutor createTaskExecutor(String poolName, int corePoolSize, int maximumPoolSize, long keepAliveTime) {
+    public static TaskExecutor createTaskExecutor(String poolName, int corePoolSize, int maximumPoolSize,
+                                                  long keepAliveTime, int queueCapacity) {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
         taskExecutor.setCorePoolSize(corePoolSize);
         taskExecutor.setMaxPoolSize(maximumPoolSize);
         taskExecutor.setKeepAliveSeconds((int) (keepAliveTime / 1000));
-        taskExecutor.setQueueCapacity(0);
+        taskExecutor.setQueueCapacity(queueCapacity);
         taskExecutor.setThreadFactory(new CustomizableThreadFactory(poolName));
         taskExecutor.setRejectedExecutionHandler(DEFAULT_REJECT_HANDLER);
         return taskExecutor;

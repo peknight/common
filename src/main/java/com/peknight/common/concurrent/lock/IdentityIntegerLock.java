@@ -53,7 +53,19 @@ public class IdentityIntegerLock {
     }
 
     public void unlock(int id) {
-        LOCK_MAP.get(id).unlock();
+        ReentrantLock lock = LOCK_MAP.get(id);
+        if (lock != null) {
+            lock.unlock();
+        }
+    }
+
+    public boolean isLocked(int id) {
+        ReentrantLock lock = LOCK_MAP.get(id);
+        if (lock == null) {
+            return false;
+        } else {
+            return lock.isLocked();
+        }
     }
 
     public void acquire(int id) {
@@ -66,6 +78,15 @@ public class IdentityIntegerLock {
     public void release(int id) {
         ACCESS_MAP.putIfAbsent(id, new Semaphore(0, fair));
         ACCESS_MAP.get(id).release();
+    }
+
+    public boolean isAvailable(int id) {
+        Semaphore semaphore = ACCESS_MAP.get(id);
+        if (semaphore == null) {
+            return true;
+        } else {
+            return semaphore.availablePermits() > 0;
+        }
     }
 
     public void remove(int id) {

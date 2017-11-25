@@ -263,6 +263,10 @@ public class State implements Comparable<State> {
         return true;
     }
 
+    public StateEnum stateEnum() {
+        return StateEnum.findByValue(syncState());
+    }
+
     public String info() {
         return StateEnum.findByValue(syncState()).getInfo();
     }
@@ -304,7 +308,7 @@ public class State implements Comparable<State> {
         return info();
     }
 
-    private enum StateEnum implements IntegerEnum {
+    public enum StateEnum implements IntegerEnum {
         NEW(State.NEW, 1 << 5, "NEW", "N"),
         NEW_WARN(State.NEW | State.WARN, 1 << 4, "new", "n"),
         OPEN(State.OPEN, 1 << 7, "OPEN", "O"),

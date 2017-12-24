@@ -23,7 +23,7 @@
  */
 package com.peknight.common.logging;
 
-import com.peknight.common.string.StringUtils;
+import com.peknight.common.reflect.util.MethodUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -63,7 +63,7 @@ public class CommonLogAspect {
     /**
      * 拦截类上或方法注解@CommonLog的所有方法
      */
-    @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
+    @Around("@within(org.joinquant.common.logging.CommonLog) || @annotation(org.joinquant.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Class<?> declaringClass = method.getDeclaringClass();
@@ -79,16 +79,9 @@ public class CommonLogAspect {
                 targetClass = targetClass.getSuperclass();
             }
         }
-
         // 获取被拦截方法的日志等级
         Level level = commonLog.value();
-
-        // 如果程序的日志输出等级高于方法的等级，那么不打印日志直接执行方法返回
-        if (isLoggingLevelEnable(logger, level)) {
-            return commonLog(proceedingJoinPoint, logger, level);
-        } else {
-            return proceedingJoinPoint.proceed();
-        }
+        return commonLog(proceedingJoinPoint, logger, level);
     }
 
     /**
@@ -98,53 +91,38 @@ public class CommonLogAspect {
         MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
         Method method = methodSignature.getMethod();
         Object[] args = proceedingJoinPoint.getArgs();
-        // 获取方法参数类型（注意空指针）
-        Class[] parameterTypes = methodSignature.getParameterTypes();
-        if (parameterTypes == null) {
-            parameterTypes = new Class[args.length];
-            for (int i = 0; i < parameterTypes.length; i++) {
-                parameterTypes[i] = args[i].getClass();
-            }
-        }
-        // 获取方法参数名（注意空指针）
-        String[] parameterNames = methodSignature.getParameterNames();
-        if (parameterNames == null) {
-            parameterNames = new String[args.length];
-            for (int i = 0; i < parameterNames.length; i++) {
-                parameterNames[i] = "arg" + i;
-            }
-        }
         EXECUTE_TIME.putIfAbsent(method, new AtomicLongArray(3));
         AtomicLongArray executeTime = EXECUTE_TIME.get(method);
         long index = executeTime.incrementAndGet(2);
-        StringBuilder paramStringBuilder = new StringBuilder("");
-        for (int i = 0; i < args.length; i++) {
-            if (args[i] != null) {
-                if (i > 0) {
-                    paramStringBuilder.append(", ");
-                }
-                paramStringBuilder.append("(").append(parameterTypes[i].getSimpleName()).append(" ")
-                        .append(parameterNames[i]).append(") ").append(StringUtils.toString(args[i]));
-            }
-        }
         String methodInfo = String.format("%s%s%d%s", method.getName(), "[", index, "]");
-        preLogger(logger, level, methodInfo, paramStringBuilder);
-
-        long start = System.nanoTime();
+        if (isLoggingLevelEnable(logger, level)) {
+            preLogger(logger, level, methodInfo, MethodUtils.argsToString(methodSignature, args));
+        }
+        String returnType = MethodUtils.getReturnTypeSimpleName(method);
         long taskTime;
-
+        long start = System.nanoTime();
         try {
             Object object = proceedingJoinPoint.proceed();
             taskTime = System.nanoTime() - start;
+            if (object != null && object instanceof CommonResult && ((CommonResult) object).getCode() != 0
+                    && level.toInt() < Level.WARN.toInt()) {
+                if (!isLoggingLevelEnable(logger, level) && isLoggingLevelEnable(logger, Level.WARN)) {
+                    preLogger(logger, Level.WARN, methodInfo, MethodUtils.argsToString(methodSignature, args));
+                }
+                level = Level.WARN;
+            }
             postLogger(logger, level, methodInfo, timeFormat(taskTime),
                     timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
-                    method.getReturnType().getSimpleName(), object);
+                    returnType, object);
             return object;
         } catch (Throwable e) {
             taskTime = System.nanoTime() - start;
+            if (!isLoggingLevelEnable(logger, level) && isLoggingLevelEnable(logger, Level.ERROR)) {
+                preLogger(logger, Level.ERROR, methodInfo, MethodUtils.argsToString(methodSignature, args));
+            }
             postErrorLogger(logger, methodInfo, timeFormat(taskTime),
                     timeFormat(executeTime.addAndGet(0, taskTime) / executeTime.incrementAndGet(1)),
-                    method.getReturnType().getSimpleName(), e);
+                    returnType, e);
             throw e;
         }
     }
@@ -152,24 +130,23 @@ public class CommonLogAspect {
     /**
      * 打印方法执行前相应级别的日志
      */
-    private static void preLogger(Logger logger, Level level, String methodInfo,
-                                  StringBuilder paramStringBuilder) {
-        String loggerFormat = paramStringBuilder.length() == 0 ? "[Begin] {}" : "[Begin] {} Args: [{}]";
+    private static void preLogger(Logger logger, Level level, String methodInfo, String argsInfo) {
+        String loggerFormat = argsInfo.length() == 0 ? "[Begin] {}" : "[Begin] {} Args: [{}]";
         switch (level) {
             case TRACE:
-                logger.trace(loggerFormat, methodInfo, paramStringBuilder);
+                logger.trace(loggerFormat, methodInfo, argsInfo);
                 return;
             case DEBUG:
-                logger.debug(loggerFormat, methodInfo, paramStringBuilder);
+                logger.debug(loggerFormat, methodInfo, argsInfo);
                 return;
             case INFO:
-                logger.info(loggerFormat, methodInfo, paramStringBuilder);
+                logger.info(loggerFormat, methodInfo, argsInfo);
                 return;
             case WARN:
-                logger.warn(loggerFormat, methodInfo, paramStringBuilder);
+                logger.warn(loggerFormat, methodInfo, argsInfo);
                 return;
             case ERROR:
-                logger.error(loggerFormat, methodInfo, paramStringBuilder);
+                logger.error(loggerFormat, methodInfo, argsInfo);
                 return;
             default:
                 return;
@@ -209,7 +186,7 @@ public class CommonLogAspect {
      * 打印异常日志
      */
     private static void postErrorLogger(Logger logger, String methodInfo,
-                                            String time, String avgTime, String returnType, Throwable e) {
+                                        String time, String avgTime, String returnType, Throwable e) {
         String loggerFormat = "void".equals(returnType) ?
                 "[Error] {} [Time: {}, AvgTime: {}] ExceptionMessage: {}" :
                 "[Error] {} [Time: {}, AvgTime: {}] [ReturnType: {}] Error: {}";
@@ -248,3 +225,4 @@ public class CommonLogAspect {
         }
     }
 }
+

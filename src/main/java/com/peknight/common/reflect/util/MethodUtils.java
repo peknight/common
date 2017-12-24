@@ -28,9 +28,13 @@ import com.peknight.common.reflect.material.BeanMaterial;
 import com.peknight.common.reflect.metadata.ConstructorMetadata;
 import com.peknight.common.reflect.metadata.MetadataContext;
 import com.peknight.common.reflect.metadata.MethodMetadata;
+import com.peknight.common.string.StringUtils;
+import org.aspectj.lang.reflect.MethodSignature;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -144,5 +148,49 @@ public final class MethodUtils {
         methodSet.removeAll(OBJECT_METHODS);
 
         return methodSet;
+    }
+
+    public static String getReturnTypeSimpleName(Method method) {
+        // 生成返回值类型
+        Type genericReturnType = method.getGenericReturnType();
+        String simpleName = method.getReturnType().getSimpleName();
+        if (genericReturnType instanceof ParameterizedType) { // 返回值如果含有泛型
+            StringBuilder returnType = new StringBuilder(simpleName);
+            returnType.append("<");
+            String actualTypes = StringUtils.toString(((ParameterizedType) genericReturnType).getActualTypeArguments());
+            return simpleName + "<" + StringUtils.substring(actualTypes, 1, -1) + ">";
+        } else {
+            return simpleName;
+        }
+    }
+
+    public static String argsToString(MethodSignature methodSignature, Object[] args) {
+        // 获取方法参数类型（注意空指针）
+        Class[] parameterTypes = methodSignature.getParameterTypes();
+        if (parameterTypes == null) {
+            parameterTypes = new Class[args.length];
+            for (int i = 0; i < parameterTypes.length; i++) {
+                parameterTypes[i] = args[i].getClass();
+            }
+        }
+        // 获取方法参数名（注意空指针）
+        String[] parameterNames = methodSignature.getParameterNames();
+        if (parameterNames == null) {
+            parameterNames = new String[args.length];
+            for (int i = 0; i < parameterNames.length; i++) {
+                parameterNames[i] = "arg" + i;
+            }
+        }
+        StringBuilder paramStringBuilder = new StringBuilder("");
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] != null) {
+                if (i > 0) {
+                    paramStringBuilder.append(", ");
+                }
+                paramStringBuilder.append("(").append(parameterTypes[i].getSimpleName()).append(" ")
+                        .append(parameterNames[i]).append(") ").append(StringUtils.toString(args[i]));
+            }
+        }
+        return paramStringBuilder.toString();
     }
 }

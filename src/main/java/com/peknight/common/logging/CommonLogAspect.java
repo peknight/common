@@ -63,7 +63,7 @@ public class CommonLogAspect {
     /**
      * 拦截类上或方法注解@CommonLog的所有方法
      */
-    @Around("@within(org.joinquant.common.logging.CommonLog) || @annotation(org.joinquant.common.logging.CommonLog)")
+    @Around("@within(com.peknight.common.logging.CommonLog) || @annotation(com.peknight.common.logging.CommonLog)")
     public Object commonLog(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         Method method = ((MethodSignature) proceedingJoinPoint.getSignature()).getMethod();
         Class<?> declaringClass = method.getDeclaringClass();

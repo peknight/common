@@ -23,10 +23,10 @@
  */
 package com.peknight.common;
 
+import com.peknight.common.config.PekApplication;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@PekApplication
 public class CommonApplication {
 
 	public static void main(String[] args) {
